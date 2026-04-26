@@ -3,6 +3,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:quiz_app/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_app/pages/login.dart';
+import 'package:quiz_app/global.dart' as global;
 
 final _router = GoRouter(
   routes: [
@@ -32,7 +33,7 @@ class MainApp extends StatelessWidget {
 
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.light,
+      themeMode: ThemeMode.dark,
     );
   }
 }
@@ -45,6 +46,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
+  bool get hasAccount => global.userId != null;
   
   @override
   Widget build(BuildContext context) {
@@ -53,10 +56,22 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(
-              onPressed: () { context.go('/login'); }, 
-              child: Text('Login page'),
-            ),
+            if (hasAccount) ...[
+              Text('Olá ${global.username}'),
+              ElevatedButton(
+                onPressed: () { 
+                  global.logout(); 
+                  setState(() {});
+                }, 
+                child: Text('Logout'),
+              ),
+            ] else ...[
+              ElevatedButton(
+                onPressed: () { context.go('/login'); }, 
+                child: Text('Login page'),
+              ),
+            ]
+              
           ],
         ),
       ),
