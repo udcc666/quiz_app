@@ -1,0 +1,20 @@
+O app vai ter de ter login obrigatório para os hosts, os clientes não precisam e têm de escolher o nome sempre que entram em um quiz diferente.
+Os quizzes podem ser ou não controlados pelo host;
+
+Definições possiveis:
+    Com ou sem host a controlar:
+        Pode ou não mostrar as respostas no fim de cada pergunta;
+        Pode ou não um utilizador entrar após já ter começado;
+
+
+    com host a controlar:
+        O host pode escolher quando passar para o próximo;
+        Escolhe se o user que entrar começa do inicio ou na pergunta atual
+
+
+    Sem o host a controlar:
+        Cada pergunta poder ter um intervalo de tempo diferente;
+        O quiz pode ter intervalo de tempo global (especifico para cada user);
+        O utilizador pode ou não voltar à pergunta anterior;
+        
+
