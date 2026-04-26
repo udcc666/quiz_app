@@ -1,12 +1,10 @@
 <?php
 
-define('JWT_SECRET', 'eRghjk4%678)0!"(/&');
-
 function db_connect(){
   $servername = "localhost";
   $username = "root";
   $password = "";
-  $dbname = "quizz_app";
+  $dbname = "quiz_app";
 
   $conn = new mysqli($servername, $username, $password, $dbname);
   $conn->set_charset("utf8mb4");
