@@ -172,7 +172,9 @@ class _QuizListPageState extends State<QuizListPage> {
         height: double.infinity,
         color: Colors.black.withAlpha(100),
         child: Center(
-          child: GestureDetector(
+          child: selectedQuiz == null
+          ? CircularProgressIndicator()
+          : GestureDetector(
             onTap: () {},
             child: Container(
               width: 500,
@@ -181,34 +183,32 @@ class _QuizListPageState extends State<QuizListPage> {
                 color: colors.surfaceContainer,
                 borderRadius: BorderRadius.circular(10)
               ),
-              child: selectedQuiz == null
-                ? CircularProgressIndicator()
-                : Flexible(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        selectedQuiz['name'],
-                        style: TextStyle(
-                          color: colors.onSurface,
-                          fontSize: 24
-                        ),
+              child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      selectedQuiz['name'],
+                      style: TextStyle(
+                        color: colors.onSurface,
+                        fontSize: 24
                       ),
-                      const Divider(),
-                      Text(
-                        selectedQuiz['description'],
-                        style: TextStyle(
-                          color: colors.onSurface,
-                          fontSize: 18
-                        ),
+                    ),
+                    const Divider(),
+                    Text(
+                      selectedQuiz['description'],
+                      style: TextStyle(
+                        color: colors.onSurface,
+                        fontSize: 18
                       ),
-                      const Divider(),
-                      FilledButton(
-                        onPressed: () {}, 
-                        child: Text('Criar sala')
-                      ),
-                    ],
-                  ),
+                    ),
+                    const Divider(),
+                    FilledButton(
+                      onPressed: () { 
+                        context.go('/host/create_quiz/${selectedQuiz['id']}'); 
+                      }, 
+                      child: Text('Criar sala')
+                    ),
+                  ],
                 ),
             ),
           ),

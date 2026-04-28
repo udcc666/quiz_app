@@ -23,10 +23,30 @@ if ($result->num_rows === 0){
 }
 
 $quiz = $result->fetch_assoc();
-
+// 'id',
+//   'name',
+//   'description',
+//   'host_controlled',
+//   'allow_late_entry',
+//   'max_clients',
+//   'show_leaderboard_between_questions',
+//   'show_answers',
+//   'duration',
+//   'start_at_host'
 echo json_encode([
     'success' => true,
-    'quiz' => $quiz
+    'quiz' => [
+        'id' => $quiz['id'],
+        'name' => $quiz['name'],
+        'description' => $quiz['description'],
+        'host_controlled' => $quiz['host_controlled'] == '1',
+        'allow_late_entry' => $quiz['allow_late_entry'] == '1',
+        'max_clients' => $quiz['max_clients'],
+        'show_leaderboard_between_questions' => $quiz['show_leaderboard_between_questions'] === '1',
+        'show_answers' => $quiz['show_answers'] == '1',
+        'duration' => $quiz['duration'],
+        'start_at_host' => $quiz['start_at_host'] == '1',
+    ],
 ]);
 
 $conn->close();
