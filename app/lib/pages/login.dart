@@ -28,7 +28,6 @@ class _LoginPageState extends State<LoginPage> {
         if (mounted) context.go('/');
       });
     }
-
   }
 
   void login() async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:quiz_app/app_theme.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quiz_app/pages/host/quiz_list.dart';
 import 'package:quiz_app/pages/login.dart';
 import 'package:quiz_app/global.dart' as global;
 
@@ -14,6 +15,12 @@ final _router = GoRouter(
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginPage(),
+    ),
+
+    // Host
+    GoRoute(
+      path: '/host/quiz_list',
+      builder: (context, state) => const QuizListPage(),
     ),
   ],
 );
@@ -33,7 +40,7 @@ class MainApp extends StatelessWidget {
 
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark,
+      themeMode: ThemeMode.system,
     );
   }
 }
@@ -55,9 +62,10 @@ class _HomePageState extends State<HomePage> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 5,
           children: [
             if (hasAccount) ...[
-              Text('Olá ${global.username}'),
+              Text('Olá ${global.username}!'),
               ElevatedButton(
                 onPressed: () { 
                   global.logout(); 
@@ -70,7 +78,11 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () { context.go('/login'); }, 
                 child: Text('Login page'),
               ),
-            ]
+            ],
+            ElevatedButton(
+              onPressed: () { context.go('/host/quiz_list'); }, 
+              child: Text('QuizList page'),
+            ),
               
           ],
         ),
