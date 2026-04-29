@@ -8,6 +8,17 @@ import 'package:quiz_app/pages/login.dart';
 import 'package:quiz_app/global.dart' as global;
 
 final _router = GoRouter(
+  
+  redirect: (context, state){
+    // if in host/...
+    if (state.matchedLocation.startsWith('/host')) {
+      if (global.userId == null) {
+        return '/';
+      }
+    }
+    
+  },
+
   routes: [
     GoRoute(
       path: '/',
@@ -73,8 +84,18 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           spacing: 5,
           children: [
-            if (hasAccount) ...[
+            if (!hasAccount) ...[
+              ElevatedButton(
+                onPressed: () { context.go('/login'); }, 
+                child: Text('Login page'),
+              ),
+              
+            ] else ...[
               Text('Olá ${global.username}!'),
+              ElevatedButton(
+                onPressed: () { context.go('/host/quiz_list'); }, 
+                child: Text('QuizList page'),
+              ),
               ElevatedButton(
                 onPressed: () { 
                   global.logout(); 
@@ -82,16 +103,8 @@ class _HomePageState extends State<HomePage> {
                 }, 
                 child: Text('Logout'),
               ),
-            ] else ...[
-              ElevatedButton(
-                onPressed: () { context.go('/login'); }, 
-                child: Text('Login page'),
-              ),
             ],
-            ElevatedButton(
-              onPressed: () { context.go('/host/quiz_list'); }, 
-              child: Text('QuizList page'),
-            ),
+            
               
           ],
         ),

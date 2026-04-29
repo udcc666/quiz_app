@@ -136,6 +136,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
         ),
         const Divider(),
         buildQuizOptions(),
+        const Divider(),
         FilledButton(
           onPressed: create, 
           child: Text('Criar'),
@@ -172,35 +173,35 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
         _buildSettingsCheckbox(
           'Permitir entrada após iniciar', 
           'allow_late_entry', 
-          active: !useDefaultSettings
+          active: !useDefaultSettings,
         ),
         _buildSettingsCheckbox(
           'Mostrar a tabela de classificação entre questões',
           'show_leaderboard_between_questions', 
-          active: !useDefaultSettings
+          active: !useDefaultSettings,
         ),
         _buildSettingsCheckbox(
           'Mostrar respostas no fim de cada questão', 
           'show_answers', 
-          active: !useDefaultSettings
+          active: !useDefaultSettings,
         ),
         _buildSettingsCheckbox(
           'Começar no host', 
           'start_at_host', 
-          active: !useDefaultSettings && hostControlled
+          active: !useDefaultSettings && hostControlled,
         ),
     
         _buildNumericField(
           'Limite de pessoas', 
           'max_clients', 
           canBeNull: true, 
-          active: !useDefaultSettings
+          active: !useDefaultSettings,
         ),
         _buildNumericField(
           'Duração', 
           'duration', 
           canBeNull: true, 
-          active: !useDefaultSettings && !hostControlled
+          active: !useDefaultSettings && !hostControlled,
         ),
       ],
     );
