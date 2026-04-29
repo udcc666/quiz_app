@@ -10,13 +10,13 @@ import 'package:quiz_app/global.dart' as global;
 final _router = GoRouter(
   
   redirect: (context, state){
-    // if in host/...
+    
     if (state.matchedLocation.startsWith('/host')) {
       if (global.userId == null) {
         return '/';
       }
     }
-    
+    return null;
   },
 
   routes: [
