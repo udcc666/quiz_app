@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 28, 2026 at 03:50 PM
+-- Generation Time: Apr 29, 2026 at 04:18 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -51,6 +51,37 @@ INSERT INTO `quizzes` (`id`, `name`, `description`, `host_controlled`, `allow_la
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `sessions`
+--
+
+CREATE TABLE `sessions` (
+  `id` int(11) NOT NULL,
+  `quiz_id` int(11) NOT NULL,
+  `host_id` int(11) NOT NULL,
+  `code` varchar(10) NOT NULL,
+  `current_question` int(11) DEFAULT NULL,
+  `status` enum('LOBBY','ACTIVE','FINISHED','') NOT NULL DEFAULT 'LOBBY',
+  `host_controlled` tinyint(1) NOT NULL COMMENT 'Host controls current question',
+  `allow_late_entry` tinyint(1) NOT NULL,
+  `max_clients` int(11) DEFAULT NULL,
+  `show_leaderboard_between_questions` tinyint(1) NOT NULL,
+  `show_answers` tinyint(1) NOT NULL,
+  `duration` bigint(20) DEFAULT NULL,
+  `start_at_host` tinyint(1) NOT NULL COMMENT 'Client starts at host or from the start'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `sessions`
+--
+
+INSERT INTO `sessions` (`id`, `quiz_id`, `host_id`, `code`, `current_question`, `status`, `host_controlled`, `allow_late_entry`, `max_clients`, `show_leaderboard_between_questions`, `show_answers`, `duration`, `start_at_host`) VALUES
+(8, 2, 1, '80O9Z4N', NULL, 'LOBBY', 0, 1, NULL, 0, 1, NULL, 0),
+(9, 2, 1, '3SU2', NULL, 'LOBBY', 0, 1, NULL, 0, 1, NULL, 0),
+(10, 2, 1, 'PQIQRPZ3J', NULL, 'LOBBY', 0, 1, NULL, 0, 1, NULL, 0);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -79,6 +110,15 @@ ALTER TABLE `quizzes`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `sessions`
+--
+ALTER TABLE `sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `code_unique` (`code`),
+  ADD KEY `idx_quiz` (`quiz_id`),
+  ADD KEY `idx_host` (`host_id`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -95,10 +135,27 @@ ALTER TABLE `quizzes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `sessions`
+--
+ALTER TABLE `sessions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `sessions`
+--
+ALTER TABLE `sessions`
+  ADD CONSTRAINT `fk_sessions_host` FOREIGN KEY (`host_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_sessions_quizzes` FOREIGN KEY (`quiz_id`) REFERENCES `quizzes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

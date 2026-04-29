@@ -23,7 +23,6 @@ function db_connect(){
     duration(int/null): in seconds, 
     allow_late_entry(bool: true),
     catch_up(bool: true): late user goes to host question or to the start
-    created_at(TIMESTAMP: CURRENT_TIMESTAMP),
   
   Table questions:
     quiz_id(int),
@@ -42,7 +41,6 @@ function db_connect(){
   Table users:
     email(varchar 320),
     password_hash(varchar 255),
-    created_at(TIMESTAMP: CURRENT_TIMESTAMP)
 
   Table sessions:
     quiz_id(int),
@@ -50,7 +48,7 @@ function db_connect(){
     code(varchar 10),
     current_question(int/null: null),
     status(enum ('LOBBY','ACTIVE','FINISHED'): 'LOBBY'),
-    created_at(TIMESTAMP: CURRENT_TIMESTAMP),
+    # and all settings from quiz
 
   Table participants:
     quiz_id(int),

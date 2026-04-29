@@ -23,16 +23,7 @@ if ($result->num_rows === 0){
 }
 
 $quiz = $result->fetch_assoc();
-// 'id',
-//   'name',
-//   'description',
-//   'host_controlled',
-//   'allow_late_entry',
-//   'max_clients',
-//   'show_leaderboard_between_questions',
-//   'show_answers',
-//   'duration',
-//   'start_at_host'
+
 echo json_encode([
     'success' => true,
     'quiz' => [

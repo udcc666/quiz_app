@@ -35,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
       _emailController.text, 
       _passwordController.text
     );
-    print(data);
+    
     if (data['success'] == false) {
       setState(() {
         errorMessage = data['error'] ?? 'Failed to login';

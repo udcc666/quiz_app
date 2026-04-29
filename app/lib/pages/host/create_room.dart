@@ -19,6 +19,10 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
 
   Map<String, dynamic> defaultSettings = {};
   Map<String, dynamic> settings = {};
+
+  bool useDefaultSettings = true;
+
+  String errorMessage = '';
   
 
   @override
@@ -48,12 +52,34 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
       };
       settings = defaultSettings.map((key, value) => MapEntry(key, value));
     });
+  } 
+
+  void create() async {
+    final Map<String, dynamic> selectedSettings = useDefaultSettings
+      ? defaultSettings
+      : settings;
+    
+    Map<String, dynamic> data = await db.createSession(
+      global.userId!, 
+      widget.quizId, 
+      selectedSettings
+    );
+
+    if (data['success'] == false){
+      setState(() {
+        errorMessage = data['error'] ?? 'Failed to create session';
+      });
+      return;
+    }
+
+    print('Session created with code \'${data['session_code']}\'');
+
   }
 
   @override
   Widget build(BuildContext context) {
-    // final theme = Theme.of(context);
-    // final colors = theme.colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Scaffold(
       body: SizedBox(
@@ -73,6 +99,18 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                 ],
               ),
             ),
+            if (errorMessage.isNotEmpty)
+              Container(
+                color: colors.error,
+                padding: EdgeInsets.all(5),
+                child: Text(
+                  errorMessage,
+                  style: TextStyle(
+                    fontSize: 24,
+                    color: colors.onError
+                  ),
+                ),
+              ),
             buildQuizDetails(),
           ],
         ),
@@ -83,6 +121,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
   Widget buildQuizDetails() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+
     if (quiz == null){
       return Center(child: CircularProgressIndicator(),);
     }
@@ -95,60 +134,139 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
             color: colors.onSurface,
           ),
         ),
-        Column(
-          children: [
-            _buildCheckboxField('Host controlled', 'host_controlled'),
-            _buildCheckboxField('Allow late entry', 'allow_late_entry'),
-            _buildCheckboxField('Show leaderboard between questions', 'show_leaderboard_between_questions'),
-            _buildCheckboxField('Show answers', 'show_answers'),
-            _buildCheckboxField('Start at host', 'start_at_host'),
-
-            _buildNumericField('Max clients', 'max_clients', canBeNull: true),
-            _buildNumericField('Duration', 'duration', canBeNull: true),
-            
-          ],
+        const Divider(),
+        buildQuizOptions(),
+        FilledButton(
+          onPressed: create, 
+          child: Text('Criar'),
         ),
       ],
     );
   }
 
-  Widget _buildCheckboxField(String label, String key) {
+  Widget buildQuizOptions() {
+
+    final hostControlled = settings['host_controlled'] ?? false;
+
+    return customExpansionTile(
+      title: const Text('Definições'),
+      children: [
+        _buildCheckbox(
+          'Usar definições predefinidas', useDefaultSettings,
+          onChanged: (bool? newValue) {
+            setState(() {
+              useDefaultSettings = newValue ?? false;
+            });
+          },
+          onTap: () {
+            setState(() {
+              useDefaultSettings = !useDefaultSettings;
+            });
+          },
+        ),
+        _buildSettingsCheckbox(
+          'Controlado pelo host', 
+          'host_controlled', 
+          active: !useDefaultSettings,
+        ),
+        _buildSettingsCheckbox(
+          'Permitir entrada após iniciar', 
+          'allow_late_entry', 
+          active: !useDefaultSettings
+        ),
+        _buildSettingsCheckbox(
+          'Mostrar a tabela de classificação entre questões',
+          'show_leaderboard_between_questions', 
+          active: !useDefaultSettings
+        ),
+        _buildSettingsCheckbox(
+          'Mostrar respostas no fim de cada questão', 
+          'show_answers', 
+          active: !useDefaultSettings
+        ),
+        _buildSettingsCheckbox(
+          'Começar no host', 
+          'start_at_host', 
+          active: !useDefaultSettings && hostControlled
+        ),
+    
+        _buildNumericField(
+          'Limite de pessoas', 
+          'max_clients', 
+          canBeNull: true, 
+          active: !useDefaultSettings
+        ),
+        _buildNumericField(
+          'Duração', 
+          'duration', 
+          canBeNull: true, 
+          active: !useDefaultSettings && !hostControlled
+        ),
+      ],
+    );
+  }
+
+  Widget customExpansionTile({
+    required Widget title,
+    required List<Widget> children,
+    bool? startExpanded,
+  }) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    bool isModified = settings[key] != defaultSettings[key];
+    final RoundedRectangleBorder shape = const RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(8)),
+    );
 
-    print('$label: ${settings[key]}');
+    return ExpansionTile(
+      title: title,
+      initiallyExpanded: startExpanded ?? false,
+      shape: shape,
+      collapsedShape: shape,
+
+      collapsedBackgroundColor: colors.surfaceContainer,
+      backgroundColor: colors.surfaceContainer,
+      childrenPadding: EdgeInsets.all(8),
+
+      children: children,
+    );
+  }
+
+  Widget _buildCheckbox(String label, bool value, { 
+    dynamic onChanged, 
+    VoidCallback? onTap, 
+    VoidCallback? onModifiedPressed, 
+    bool isModified = false,
+    bool active = true,
+  }) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     
     return InkWell(
-      onTap: () {
-        setState(() {
-          settings[key] = !(settings[key] ?? false);
-        });
-      },
+      onTap: active ? onTap : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4.0),
         child: Row(
           children: [
             Checkbox(
-              value: settings[key],
+              value: value,
               activeColor: colors.primary,
               checkColor: colors.surface,
               side: BorderSide(color: colors.onSurface.withAlpha(150)),
-              onChanged: (bool? newValue) {
-                setState(() {
-                  settings[key] = newValue ?? false;
-                });
-              },
+              onChanged: active ? onChanged : null,
+              
             ),
             Text(
               label,
-              style: TextStyle(color: colors.onSurface, fontSize: 16),
+              style: TextStyle(
+                color: active ? colors.onSurface : colors.onSurface.withAlpha(150),
+                fontSize: 16
+              ),
             ),
             if (isModified)
               IconButton(
                 icon: Icon(Icons.restore, size: 18, color: colors.primary),
-                onPressed: () => setState(() => settings[key] = defaultSettings[key]),
+                onPressed: active ? onModifiedPressed : null,
                 tooltip: "Reverter",
               ),
           ],
@@ -157,20 +275,48 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     );
   }
 
-  Widget _buildNumericField(String label, String key, {bool canBeNull = false}) {
+  Widget _buildSettingsCheckbox(String label, String key, {bool active = true}) {
+    // final theme = Theme.of(context);
+    // final colors = theme.colorScheme;
+
+    final Map<String, dynamic> selectedSettings = useDefaultSettings ? defaultSettings : settings;
+    
+    return _buildCheckbox(
+      label, 
+      selectedSettings[key],
+      isModified: selectedSettings[key] != defaultSettings[key],
+      active: active,
+
+      onChanged: (bool? newValue) {
+        setState(() {
+          selectedSettings[key] = newValue ?? false;
+        });
+      },
+      onTap: () {
+        setState(() {
+          selectedSettings[key] = !(selectedSettings[key] ?? false);
+        });
+      },
+      onModifiedPressed: () => setState(() => selectedSettings[key] = defaultSettings[key]),
+    );
+  }
+
+  Widget _buildNumericField(String label, String key, {bool canBeNull = false, bool active = true}) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    bool isModified = settings[key] != defaultSettings[key];
-    bool isNull = settings[key] == null;
+    final Map<String, dynamic> selectedSettings = useDefaultSettings ? defaultSettings : settings;
+
+    bool isModified = selectedSettings[key] != defaultSettings[key];
+    bool isNull = selectedSettings[key] == null;
 
     return Row(
       children: [
         Expanded(
           child: TextFormField(
             key: Key(key + isNull.toString()),
-            initialValue: isNull ? '' : settings[key].toString(),
-            enabled: !isNull,
+            initialValue: isNull ? '' : selectedSettings[key].toString(),
+            enabled: active && !isNull,
             keyboardType: TextInputType.number,
             style: TextStyle(color: colors.onSurface),
             decoration: InputDecoration(
@@ -180,24 +326,30 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
               suffixIcon: isModified 
                 ? IconButton(
                     icon: const Icon(Icons.restore, size: 20),
-                    onPressed: () => setState(() => settings[key] = defaultSettings[key]),
+                    onPressed: () => setState(() => selectedSettings[key] = defaultSettings[key]),
                   ) 
                 : null,
             ),
-            onChanged: (v) => settings[key] = int.tryParse(v),
+            onChanged: (v) => selectedSettings[key] = int.tryParse(v),
           ),
         ),
         
         if (canBeNull) ...[
           const SizedBox(width: 10),
           GestureDetector(
-            onTap: () => setState(() => settings[key] = isNull ? 0 : null),
+            onTap: active ? () => setState(() => selectedSettings[key] = isNull ? 0 : null) : null,
             child: Column(
               children: [
-                const Text("null", style: TextStyle(fontSize: 12)),
+                Text(
+                  "null", 
+                  style: TextStyle(
+                    color: active ? colors.onSurface : colors.onSurface.withAlpha(150),
+                    fontSize: 12,
+                  )
+                ),
                 Checkbox(
                   value: isNull,
-                  onChanged: (v) => setState(() => settings[key] = v! ? null : 0),
+                  onChanged: active ? (v) => setState(() => selectedSettings[key] = v! ? null : 0) : null,
                 ),
               ],
             ),
