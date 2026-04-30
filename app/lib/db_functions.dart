@@ -64,7 +64,7 @@ Future<Map<String, dynamic>> getQuizWithId(int id) async {
   return json.decode(response.body);
 }
 
-Future<Map<String, dynamic>> createSession(int userId, int quizId, Map<String, dynamic> settings) async {
+/* Future<Map<String, dynamic>> createSession(int userId, int quizId, Map<String, dynamic> settings) async {
   late dynamic response;
   
   try {
@@ -86,4 +86,4 @@ Future<Map<String, dynamic>> createSession(int userId, int quizId, Map<String, d
   }
   
   return json.decode(response.body);
-}
+}*/

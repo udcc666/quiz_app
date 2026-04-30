@@ -1,8 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_app/db_functions.dart' as db;
 import 'package:quiz_app/global.dart' as global;
+import 'package:quiz_app/server_functions.dart' as server;
 
 class CreateRoomPage extends StatefulWidget {
   const CreateRoomPage({super.key, required this.quizId});
@@ -14,6 +16,7 @@ class CreateRoomPage extends StatefulWidget {
 }
 
 class _CreateRoomPageState extends State<CreateRoomPage> {
+  bool isCreating = false;
 
   dynamic quiz;
 
@@ -23,13 +26,12 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
   bool useDefaultSettings = true;
 
   String errorMessage = '';
-  
 
   @override
   void initState() {
     super.initState();
 
-    if (widget.quizId < 0){
+    if (widget.quizId < 0) {
       context.go('/host/quiz_list');
       return;
     }
@@ -45,35 +47,46 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
         'host_controlled': quiz['host_controlled'],
         'duration': quiz['duration'],
         'max_clients': quiz['max_clients'],
-        'show_leaderboard_between_questions': quiz['show_leaderboard_between_questions'],
+        'show_leaderboard_between_questions':
+            quiz['show_leaderboard_between_questions'],
         'show_answers': quiz['show_answers'],
         'allow_late_entry': quiz['allow_late_entry'],
         'start_at_host': quiz['start_at_host'],
       };
       settings = defaultSettings.map((key, value) => MapEntry(key, value));
     });
-  } 
+  }
 
   void create() async {
+    if (isCreating) return;
+    setState(() {
+      isCreating = true;
+      errorMessage = '';
+    });
+
     final Map<String, dynamic> selectedSettings = useDefaultSettings
-      ? defaultSettings
-      : settings;
-    
-    Map<String, dynamic> data = await db.createSession(
-      global.userId!, 
-      widget.quizId, 
-      selectedSettings
+        ? defaultSettings
+        : settings;
+
+    final data = await server.host.addRoom(
+      global.userId!,
+      widget.quizId,
+      selectedSettings,
     );
 
-    if (data['success'] == false){
+    if (!data['success']) {
+      print('Failed to create session: ${data['message']}');
       setState(() {
-        errorMessage = data['error'] ?? 'Failed to create session';
+        isCreating = false;
+        errorMessage = data['message'];
       });
       return;
     }
 
-    print('Session created with code \'${data['session_code']}\'');
-
+    print('Session created with code \'${data['pin']}\'');
+    
+    if (!mounted) return;
+    context.go('/host/monitor/${data['pin']}');
   }
 
   @override
@@ -85,35 +98,37 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
       body: SizedBox(
         width: double.infinity,
         height: double.infinity,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(
-              height: 40,
-              child: Row(
+        child: isCreating
+            ? Center(child: CircularProgressIndicator())
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  TextButton(
-                    onPressed: () { context.go('/host/quiz_list'); }, 
-                    child: Text('<- Voltar')
+                  SizedBox(
+                    height: 40,
+                    child: Row(
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            context.go('/host/quiz_list');
+                          },
+                          child: Text('<- Voltar'),
+                        ),
+                      ],
+                    ),
                   ),
+
+                  if (errorMessage.isNotEmpty)
+                    Container(
+                      color: colors.error,
+                      padding: EdgeInsets.all(5),
+                      child: Text(
+                        errorMessage,
+                        style: TextStyle(fontSize: 24, color: colors.onError),
+                      ),
+                    ),
+                  buildQuizDetails(),
                 ],
               ),
-            ),
-            if (errorMessage.isNotEmpty)
-              Container(
-                color: colors.error,
-                padding: EdgeInsets.all(5),
-                child: Text(
-                  errorMessage,
-                  style: TextStyle(
-                    fontSize: 24,
-                    color: colors.onError
-                  ),
-                ),
-              ),
-            buildQuizDetails(),
-          ],
-        ),
       ),
     );
   }
@@ -122,38 +137,33 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    if (quiz == null){
-      return Center(child: CircularProgressIndicator(),);
+    if (quiz == null) {
+      return Center(child: CircularProgressIndicator());
     }
 
     return Column(
       children: [
-        Text(quiz['name'],
-          style: TextStyle(
-            fontSize: 24,
-            color: colors.onSurface,
-          ),
+        Text(
+          quiz['name'],
+          style: TextStyle(fontSize: 24, color: colors.onSurface),
         ),
         const Divider(),
         buildQuizOptions(),
         const Divider(),
-        FilledButton(
-          onPressed: create, 
-          child: Text('Criar'),
-        ),
+        FilledButton(onPressed: create, child: Text('Criar')),
       ],
     );
   }
 
   Widget buildQuizOptions() {
-
     final hostControlled = settings['host_controlled'] ?? false;
 
     return customExpansionTile(
       title: const Text('Definições'),
       children: [
         _buildCheckbox(
-          'Usar definições predefinidas', useDefaultSettings,
+          'Usar definições predefinidas',
+          useDefaultSettings,
           onChanged: (bool? newValue) {
             setState(() {
               useDefaultSettings = newValue ?? false;
@@ -166,41 +176,41 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
           },
         ),
         _buildSettingsCheckbox(
-          'Controlado pelo host', 
-          'host_controlled', 
+          'Controlado pelo host',
+          'host_controlled',
           active: !useDefaultSettings,
         ),
         _buildSettingsCheckbox(
-          'Permitir entrada após iniciar', 
-          'allow_late_entry', 
+          'Permitir entrada após iniciar',
+          'allow_late_entry',
           active: !useDefaultSettings,
         ),
         _buildSettingsCheckbox(
           'Mostrar a tabela de classificação entre questões',
-          'show_leaderboard_between_questions', 
+          'show_leaderboard_between_questions',
           active: !useDefaultSettings,
         ),
         _buildSettingsCheckbox(
-          'Mostrar respostas no fim de cada questão', 
-          'show_answers', 
+          'Mostrar respostas no fim de cada questão',
+          'show_answers',
           active: !useDefaultSettings,
         ),
         _buildSettingsCheckbox(
-          'Começar no host', 
-          'start_at_host', 
+          'Começar no host',
+          'start_at_host',
           active: !useDefaultSettings && hostControlled,
         ),
-    
+
         _buildNumericField(
-          'Limite de pessoas', 
-          'max_clients', 
-          canBeNull: true, 
+          'Limite de pessoas',
+          'max_clients',
+          canBeNull: true,
           active: !useDefaultSettings,
         ),
         _buildNumericField(
-          'Duração', 
-          'duration', 
-          canBeNull: true, 
+          'Duração',
+          'duration',
+          canBeNull: true,
           active: !useDefaultSettings && !hostControlled,
         ),
       ],
@@ -233,16 +243,18 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     );
   }
 
-  Widget _buildCheckbox(String label, bool value, { 
-    dynamic onChanged, 
-    VoidCallback? onTap, 
-    VoidCallback? onModifiedPressed, 
+  Widget _buildCheckbox(
+    String label,
+    bool value, {
+    dynamic onChanged,
+    VoidCallback? onTap,
+    VoidCallback? onModifiedPressed,
     bool isModified = false,
     bool active = true,
   }) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    
+
     return InkWell(
       onTap: active ? onTap : null,
       child: Padding(
@@ -255,13 +267,14 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
               checkColor: colors.surface,
               side: BorderSide(color: colors.onSurface.withAlpha(150)),
               onChanged: active ? onChanged : null,
-              
             ),
             Text(
               label,
               style: TextStyle(
-                color: active ? colors.onSurface : colors.onSurface.withAlpha(150),
-                fontSize: 16
+                color: active
+                    ? colors.onSurface
+                    : colors.onSurface.withAlpha(150),
+                fontSize: 16,
               ),
             ),
             if (isModified)
@@ -276,14 +289,20 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     );
   }
 
-  Widget _buildSettingsCheckbox(String label, String key, {bool active = true}) {
+  Widget _buildSettingsCheckbox(
+    String label,
+    String key, {
+    bool active = true,
+  }) {
     // final theme = Theme.of(context);
     // final colors = theme.colorScheme;
 
-    final Map<String, dynamic> selectedSettings = useDefaultSettings ? defaultSettings : settings;
-    
+    final Map<String, dynamic> selectedSettings = useDefaultSettings
+        ? defaultSettings
+        : settings;
+
     return _buildCheckbox(
-      label, 
+      label,
       selectedSettings[key],
       isModified: selectedSettings[key] != defaultSettings[key],
       active: active,
@@ -298,15 +317,23 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
           selectedSettings[key] = !(selectedSettings[key] ?? false);
         });
       },
-      onModifiedPressed: () => setState(() => selectedSettings[key] = defaultSettings[key]),
+      onModifiedPressed: () =>
+          setState(() => selectedSettings[key] = defaultSettings[key]),
     );
   }
 
-  Widget _buildNumericField(String label, String key, {bool canBeNull = false, bool active = true}) {
+  Widget _buildNumericField(
+    String label,
+    String key, {
+    bool canBeNull = false,
+    bool active = true,
+  }) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    final Map<String, dynamic> selectedSettings = useDefaultSettings ? defaultSettings : settings;
+    final Map<String, dynamic> selectedSettings = useDefaultSettings
+        ? defaultSettings
+        : settings;
 
     bool isModified = selectedSettings[key] != defaultSettings[key];
     bool isNull = selectedSettings[key] == null;
@@ -323,42 +350,53 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
             decoration: InputDecoration(
               labelText: label,
               labelStyle: TextStyle(color: colors.onSurface.withAlpha(150)),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              suffixIcon: isModified 
-                ? IconButton(
-                    icon: const Icon(Icons.restore, size: 20),
-                    onPressed: () => setState(() => selectedSettings[key] = defaultSettings[key]),
-                  ) 
-                : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              suffixIcon: isModified
+                  ? IconButton(
+                      icon: const Icon(Icons.restore, size: 20),
+                      onPressed: () => setState(
+                        () => selectedSettings[key] = defaultSettings[key],
+                      ),
+                    )
+                  : null,
             ),
             onChanged: (v) => selectedSettings[key] = int.tryParse(v),
           ),
         ),
-        
+
         if (canBeNull) ...[
           const SizedBox(width: 10),
           GestureDetector(
-            onTap: active ? () => setState(() => selectedSettings[key] = isNull ? 0 : null) : null,
+            onTap: active
+                ? () =>
+                      setState(() => selectedSettings[key] = isNull ? 0 : null)
+                : null,
             child: Column(
               children: [
                 Text(
-                  "null", 
+                  "null",
                   style: TextStyle(
-                    color: active ? colors.onSurface : colors.onSurface.withAlpha(150),
+                    color: active
+                        ? colors.onSurface
+                        : colors.onSurface.withAlpha(150),
                     fontSize: 12,
-                  )
+                  ),
                 ),
                 Checkbox(
                   value: isNull,
-                  onChanged: active ? (v) => setState(() => selectedSettings[key] = v! ? null : 0) : null,
+                  onChanged: active
+                      ? (v) => setState(
+                          () => selectedSettings[key] = v! ? null : 0,
+                        )
+                      : null,
                 ),
               ],
             ),
-            
           ),
         ],
       ],
     );
   }
-
 }

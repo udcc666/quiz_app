@@ -3,14 +3,13 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:quiz_app/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_app/pages/host/create_room.dart';
+import 'package:quiz_app/pages/host/monitor.dart';
 import 'package:quiz_app/pages/host/quiz_list.dart';
 import 'package:quiz_app/pages/login.dart';
 import 'package:quiz_app/global.dart' as global;
 
 final _router = GoRouter(
-  
-  redirect: (context, state){
-    
+  redirect: (context, state) {
     if (state.matchedLocation.startsWith('/host')) {
       if (global.userId == null) {
         return '/';
@@ -20,14 +19,8 @@ final _router = GoRouter(
   },
 
   routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const HomePage(),
-    ),
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginPage(),
-    ),
+    GoRoute(path: '/', builder: (context, state) => const HomePage()),
+    GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
 
     // Host
     GoRoute(
@@ -37,16 +30,27 @@ final _router = GoRouter(
     GoRoute(
       path: '/host/create_quiz/:id',
       builder: (context, state) {
-        final int id = int.tryParse(state.pathParameters['id']??'-1') ?? -1;
-        
+        final int id = int.tryParse(state.pathParameters['id'] ?? '-1') ?? -1;
+
         return CreateRoomPage(quizId: id);
+      },
+    ),
+    GoRoute(
+      path: '/host/monitor/:pin',
+      builder: (context, state) {
+        final String pin = state.pathParameters['pin'] ?? '';
+
+        return MonitorPage(sessionPin: pin);
       },
     ),
   ],
 );
 
-void main() {
+void main() async {
   usePathUrlStrategy();
+
+  global.client.tryConnect();
+
   runApp(const MainApp());
 }
 
@@ -73,9 +77,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   bool get hasAccount => global.userId != null;
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,26 +89,27 @@ class _HomePageState extends State<HomePage> {
           children: [
             if (!hasAccount) ...[
               ElevatedButton(
-                onPressed: () { context.go('/login'); }, 
+                onPressed: () {
+                  context.go('/login');
+                },
                 child: Text('Login page'),
               ),
-              
             ] else ...[
               Text('Olá ${global.username}!'),
               ElevatedButton(
-                onPressed: () { context.go('/host/quiz_list'); }, 
+                onPressed: () {
+                  context.go('/host/quiz_list');
+                },
                 child: Text('QuizList page'),
               ),
               ElevatedButton(
-                onPressed: () { 
-                  global.logout(); 
+                onPressed: () {
+                  global.logout();
                   setState(() {});
-                }, 
+                },
                 child: Text('Logout'),
               ),
             ],
-            
-              
           ],
         ),
       ),
