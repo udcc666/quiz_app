@@ -75,7 +75,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     );
 
     if (!data['success']) {
-      print('Failed to create session: ${data['message']}');
+      print('Failed to create session: ${data['error']}');
       setState(() {
         isCreating = false;
         errorMessage = data['message'];
