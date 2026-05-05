@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_app/db_functions.dart' as db;
-import 'package:quiz_app/global.dart' as global;
+// import 'package:quiz_app/global.dart' as global;
 
 class QuizListPage extends StatefulWidget {
   const QuizListPage({super.key});

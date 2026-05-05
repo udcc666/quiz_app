@@ -24,10 +24,38 @@ class ServerHostFunctions {
     // Success
     server.sessions[pin] = {'host': hostId, 'clients': []};
 
-    server.log("Created session $pin");
+    server.log("Created session \'$pin\'");
 
     message['success'] = true;
     message['pin'] = pin;
+    server.broadcast2Client(hostId, message);
+  }
+
+  void removeRoom(String hostId, String pin) async {
+    Map<String, dynamic> message = {
+      'type': 'remove_room',
+      'success': false,
+    };
+
+    if (!server.sessions.containsKey(pin)) {
+      message['error'] = 'Session not found';
+      server.broadcast2Client(hostId, message);
+      return;
+    }
+
+    if (server.sessions[pin]['host'] != hostId) {
+      message['error'] = 'You are not the host of this session';
+      server.broadcast2Client(hostId, message);
+      return;
+    }
+
+    // Remove
+    await db.deleteSession(pin);
+
+    server.sessions.remove(pin);
+    server.log("Removed session \'$pin\'");
+
+    message['success'] = true;
     server.broadcast2Client(hostId, message);
   }
 }

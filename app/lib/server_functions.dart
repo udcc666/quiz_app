@@ -30,6 +30,18 @@ class Host {
       'settings': settings,
     });
   }
+
+  Future<Map<String, dynamic>> removeRoom(String pin) async {
+    if (!global.client.isConnected) {
+      print("Not connected");
+      return {'success': false, 'message': 'Not connected to server'};
+    }
+
+    return await getData('remove_room', {
+      'type': 'remove_room',
+      'pin': pin,
+    });
+  }
 }
 
 class Client {}
