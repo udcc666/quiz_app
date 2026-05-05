@@ -95,6 +95,11 @@ class Server {
       broadcast2Client(clientId, message);
     }
   }
+  void broadcast2Host(String pin, Map<String, dynamic> message) {
+    if (!sessions.containsKey(pin)) return;
+    
+    broadcast2Client(sessions[pin]['host'], message);
+  }
 
   void _handle_data(String clientId, dynamic data) {
     if (data['type'] == null) {

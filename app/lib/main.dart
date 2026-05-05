@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:quiz_app/app_theme.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quiz_app/pages/client/room.dart';
 import 'package:quiz_app/pages/client/select_room.dart';
 import 'package:quiz_app/pages/host/create_room.dart';
 import 'package:quiz_app/pages/host/monitor.dart';
@@ -48,7 +49,20 @@ final _router = GoRouter(
     // Client
     GoRoute(
       path: '/client/select_room',
-      builder: (context, state) => const SelectRoomPage(),
+      builder: (context, state) => SelectRoomPage(),
+    ),
+    GoRoute(
+      path: '/client/room',
+      builder: (context, state) => RoomPage(),
+      routes: [
+        GoRoute(
+          path: ':pin',
+          builder: (context, state) {
+            final String? pin = state.pathParameters['pin'];
+            return RoomPage(pin: pin);
+          },
+        ),
+      ],
     ),
   ],
 );
@@ -111,7 +125,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ElevatedButton(
               onPressed: () {
-                context.go('/client/select_room');
+                context.go('/client/room');
               },
               child: Text('SelectRoom page'),
             ),
