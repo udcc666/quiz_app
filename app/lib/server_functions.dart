@@ -44,7 +44,28 @@ class Host {
   }
 }
 
-class Client {}
+class Client {
+  Future<dynamic> getData(String type, dynamic message) {
+    var msg = jsonEncode(message);
+
+    global.client.send(msg);
+
+    return global.client.onMessage.where((data) => data['type'] == type).first;
+  }
+  
+  Future<Map<String, dynamic>> joinRoom(String name, String pin) async {
+    if (!global.client.isConnected) {
+      print("Not connected");
+      return {'success': false, 'message': 'Not connected to server'};
+    }
+
+    return await getData('join_room', {
+      'type': 'join_room',
+      'name': name,
+      'pin': pin,
+    });
+  }  
+}
 
 final host = Host();
 final client = Client();

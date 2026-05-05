@@ -34,6 +34,31 @@ Future<Map<String, dynamic>> createSession(
   return json.decode(response.body);
 }
 
+Future<Map<String, dynamic>> deleteSession(String pin) async {
+  late dynamic response;
+
+  try {
+    response = await http.post(
+      Uri.parse('$host/session/delete.php'),
+      headers: headers,
+      body: jsonEncode({
+        'pin': pin,
+      }),
+    );
+  } catch (e) {
+    return {'success': false, 'error': 'Failed to connect to backend'};
+  }
+
+    if (response.statusCode != 200) {
+        return {
+        'success': false,
+        'error': 'Backend returned code ${response.statusCode}'
+        };
+    }
+    
+    return json.decode(response.body);
+}
+
 // Future<bool> canUserEnterQuizz(int quizzId, String name) async {
 //   final response = await http.get(Uri.parse('$host/can_user_enter.php?quizz_id=$quizzId&name=$name'));
 //   if (response.statusCode != 200) {

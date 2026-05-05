@@ -101,10 +101,20 @@ class Server {
       return;
     }
     switch (data['type']) {
+      // Host
       case 'add_room':
         functions.host.addRoom(
             clientId, data['user_id'], data['quiz_id'], data['settings']);
         break;
+      case 'remove_room':
+        functions.host.removeRoom(clientId, data['pin']);
+        break;
+        
+      // Client
+      case 'join_room':
+        functions.client.joinRoom(clientId, data['name'], data['pin']);
+        break;
+      
     }
     /*switch (data['type']){
       // Host

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:quiz_app/app_theme.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quiz_app/pages/client/select_room.dart';
 import 'package:quiz_app/pages/host/create_room.dart';
 import 'package:quiz_app/pages/host/monitor.dart';
 import 'package:quiz_app/pages/host/quiz_list.dart';
@@ -42,6 +43,12 @@ final _router = GoRouter(
 
         return MonitorPage(sessionPin: pin);
       },
+    ),
+
+    // Client
+    GoRoute(
+      path: '/client/select_room',
+      builder: (context, state) => const SelectRoomPage(),
     ),
   ],
 );
@@ -87,21 +94,28 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           spacing: 5,
           children: [
-            if (!hasAccount) ...[
+            if (!hasAccount)
               ElevatedButton(
                 onPressed: () {
                   context.go('/login');
                 },
                 child: Text('Login page'),
               ),
-            ] else ...[
-              Text('Olá ${global.username}!'),
+            if (hasAccount) Text('Olá ${global.username}!'),
+            if (hasAccount)
               ElevatedButton(
                 onPressed: () {
                   context.go('/host/quiz_list');
                 },
                 child: Text('QuizList page'),
               ),
+            ElevatedButton(
+              onPressed: () {
+                context.go('/client/select_room');
+              },
+              child: Text('SelectRoom page'),
+            ),
+            if (hasAccount)
               ElevatedButton(
                 onPressed: () {
                   global.logout();
@@ -109,7 +123,6 @@ class _HomePageState extends State<HomePage> {
                 },
                 child: Text('Logout'),
               ),
-            ],
           ],
         ),
       ),
