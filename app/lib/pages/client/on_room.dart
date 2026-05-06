@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 // import 'package:quiz_app/db_functions.dart' as db;
 // import 'package:quiz_app/global.dart' as global;
-// import 'package:quiz_app/server_functions.dart' as server;
+import 'package:quiz_app/server_functions.dart' as server;
 
 class OnRoomPage extends StatefulWidget {
   const OnRoomPage({super.key, required this.pin});
@@ -19,6 +19,12 @@ class _OnRoomPageState extends State<OnRoomPage> {
     super.initState();
   }
 
+  void exit() async {
+    await server.client.leaveRoom(widget.pin);
+    if (!mounted) return;
+    context.go('/');
+  }
+
   @override
   Widget build(BuildContext context) {
     // final theme = Theme.of(context);
@@ -30,10 +36,8 @@ class _OnRoomPageState extends State<OnRoomPage> {
           Row(
             children: [
               TextButton(
-                onPressed: () {
-                  context.go('/client/room');
-                },
-                child: Text('<- Voltar'),
+                onPressed: exit,
+                child: Text('<- Sair'),
               ),
             ],
           ),

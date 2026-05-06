@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:quiz_app/app_theme.dart';
 import 'package:go_router/go_router.dart';
-import 'package:quiz_app/pages/client/room.dart';
+import 'package:quiz_app/pages/client/on_room.dart';
 import 'package:quiz_app/pages/client/select_room.dart';
 import 'package:quiz_app/pages/host/create_room.dart';
 import 'package:quiz_app/pages/host/monitor.dart';
 import 'package:quiz_app/pages/host/quiz_list.dart';
+import 'package:quiz_app/pages/host/search_owned_rooms.dart';
 import 'package:quiz_app/pages/login.dart';
 import 'package:quiz_app/global.dart' as global;
 
@@ -45,24 +46,30 @@ final _router = GoRouter(
         return MonitorPage(sessionPin: pin);
       },
     ),
-
+    GoRoute(
+      path: '/host/search_owned_rooms',
+      builder: (context, state) => const SearchOwnedRoomsPage(),
+    ),
     // Client
     GoRoute(
       path: '/client/select_room',
       builder: (context, state) => SelectRoomPage(),
-    ),
-    GoRoute(
-      path: '/client/room',
-      builder: (context, state) => RoomPage(),
       routes: [
         GoRoute(
           path: ':pin',
           builder: (context, state) {
             final String? pin = state.pathParameters['pin'];
-            return RoomPage(pin: pin);
+            return SelectRoomPage(pin: pin);
           },
         ),
       ],
+    ),
+    GoRoute(
+     path: '/client/room/:pin',
+      builder: (context, state) {
+        final String pin = state.pathParameters['pin'] ?? '';
+        return OnRoomPage(pin: pin);
+      },
     ),
   ],
 );
@@ -123,9 +130,16 @@ class _HomePageState extends State<HomePage> {
                 },
                 child: Text('QuizList page'),
               ),
+              if (hasAccount)
+                ElevatedButton(
+                  onPressed: () {
+                    context.go('/host/search_owned_rooms');
+                  },
+                  child: Text('SearchOwnedRooms page'),
+                ),
             ElevatedButton(
               onPressed: () {
-                context.go('/client/room');
+                context.go('/client/select_room');
               },
               child: Text('SelectRoom page'),
             ),

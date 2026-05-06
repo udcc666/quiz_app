@@ -21,7 +21,7 @@ $host_id = $data['user_id'] ?? $_POST['host_id'] ?? null;
 $settings = $data['settings'] ?? $_POST['settings'] ?? [];
 $s = [];
 
-// Conversão correta para 1 e 0
+// Convert true/false to 1/0
 foreach ($settings as $key => $value) {
     if (is_bool($value)) {
         $s[$key] = $value ? 1 : 0;

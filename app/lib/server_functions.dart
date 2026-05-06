@@ -37,10 +37,7 @@ class Host {
       return {'success': false, 'message': 'Not connected to server'};
     }
 
-    return await getData('remove_room', {
-      'type': 'remove_room',
-      'pin': pin,
-    });
+    return await getData('remove_room', {'type': 'remove_room', 'pin': pin});
   }
 }
 
@@ -52,7 +49,7 @@ class Client {
 
     return global.client.onMessage.where((data) => data['type'] == type).first;
   }
-  
+
   Future<Map<String, dynamic>> joinRoom(String name, String pin) async {
     if (!global.client.isConnected) {
       print("Not connected");
@@ -64,7 +61,19 @@ class Client {
       'name': name,
       'pin': pin,
     });
-  }  
+  }
+
+  Future<Map<String, dynamic>> leaveRoom(String pin) async {
+    if (!global.client.isConnected) {
+      print("Not connected");
+      return {'success': false, 'message': 'Not connected to server'};
+    }
+
+    return await getData('leave_room', {
+      'type': 'leave_room',
+      'pin': pin,
+    });
+  }
 }
 
 final host = Host();

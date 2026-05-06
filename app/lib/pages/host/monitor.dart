@@ -25,28 +25,54 @@ class _MonitorPageState extends State<MonitorPage> {
   void checkSockets() {
     global.client.onMessage.listen((data) {
       if (!mounted) return;
-      print('Host received: $data');
+      if (data['type'] == 'player_joined') {
+        setState(() {
+          numPlayers++;
+        });
+      }
+      else if (data['type'] == 'player_left') {
+        setState(() {
+          numPlayers--;
+        });
+      }
+
     });
   }
 
-  void quit() async {
+  void closeRoom() async {
     await server.host.removeRoom(widget.sessionPin);
+    if (!mounted) return;
+    goBack();
+  }
+
+  void goBack() {
     context.go('/');
   }
 
   @override
   Widget build(BuildContext context) {
-    // final theme = Theme.of(context);
-    // final colors = theme.colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Scaffold(
       body: Column(
         children: [
-          TextButton(
-            onPressed: () {
-              quit();
-            },
-            child: Text('<- Voltar'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                onPressed: goBack,
+                child: Text('<- Voltar'),
+              ),
+              TextButton(
+                onPressed: closeRoom,
+                style: TextButton.styleFrom(
+                  backgroundColor: colors.error,
+                  foregroundColor: colors.onError,
+                ),
+                child: Text('Close Room'),
+              ),
+            ],
           ),
           Center(child: buildWaitingScreen()),
         ],

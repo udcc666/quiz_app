@@ -119,6 +119,9 @@ class Server {
       case 'join_room':
         functions.client.joinRoom(clientId, data['name'], data['pin']);
         break;
+      case 'leave_room':
+        functions.client.leaveRoom(clientId, data['pin']);
+        break;
       
     }
     /*switch (data['type']){

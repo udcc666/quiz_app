@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 // import 'package:quiz_app/db_functions.dart' as db;
 // import 'package:quiz_app/global.dart' as global;
-// import 'package:quiz_app/server_functions.dart' as server;
+import 'package:quiz_app/server_functions.dart' as server;
 
 class SelectRoomPage extends StatefulWidget {
-  const SelectRoomPage({super.key, this.initialPin = '', this.errorMessage});
-  
-  final String initialPin;
-  final String? errorMessage;
+  const SelectRoomPage({super.key, this.pin});
+
+  final String? pin;
 
   @override
   State<SelectRoomPage> createState() => _SelectRoomPageState();
@@ -16,15 +15,46 @@ class SelectRoomPage extends StatefulWidget {
 
 class _SelectRoomPageState extends State<SelectRoomPage> {
   final TextEditingController _pinController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+
+  bool loading = false;
+  bool validPin = false;
+  String? errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _pinController.text = widget.initialPin;
+    _pinController.text = widget.pin ?? '';
   }
 
-  void tryConnect() {
-    context.go('/client/room/${_pinController.text.trim().toUpperCase()}');
+  void tryConnect({bool isFirstCheck = false}) async {
+    if (loading) return;
+
+    setState(() {
+      loading = true;
+    });
+
+    String pin = _pinController.text.trim();
+    String name = _nameController.text.trim();
+
+    final data = await server.client.joinRoom(name, pin);
+
+    if (data['success']) {
+      if (!mounted) return;
+      context.go('/client/room/${pin}');
+      return;
+    }
+
+    setState(() {
+      loading = false;
+      validPin = data['valid_room'];
+      errorMessage = data['error'];
+      if (isFirstCheck) {
+        if (validPin) {
+          errorMessage = null;
+        }
+      }
+    });
   }
 
   @override
@@ -52,9 +82,9 @@ class _SelectRoomPageState extends State<SelectRoomPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 spacing: 10,
                 children: [
-                  if (widget.errorMessage != null)
+                  if (errorMessage != null)
                     Text(
-                      widget.errorMessage!,
+                      errorMessage!,
                       style: TextStyle(
                         color: colors.onError,
                         backgroundColor: colors.error,
@@ -63,6 +93,13 @@ class _SelectRoomPageState extends State<SelectRoomPage> {
                   TextField(
                     controller: _pinController,
                     decoration: InputDecoration(labelText: 'Pin da sala'),
+                    onSubmitted: (_) {
+                      tryConnect();
+                    },
+                  ),
+                  TextField(
+                    controller: _nameController,
+                    decoration: InputDecoration(labelText: 'Nome'),
                     onSubmitted: (_) {
                       tryConnect();
                     },
