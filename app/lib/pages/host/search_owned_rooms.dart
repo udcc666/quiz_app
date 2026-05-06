@@ -16,6 +16,9 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
 
   bool loading = true;
   List<dynamic> sessions = [];
+  Map<String, dynamic> sessionsByName = {};
+
+  String? selectedQuizName;
 
   @override
   void initState() {
@@ -27,10 +30,11 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
     setState(() {
       loading = true;
     });
+
     final data = await db.getOwnedRooms(global.userId!);
-    print('data: $data');
+
     if (!mounted) return;
-    
+
     if (data['success'] == false) {
       setState(() {
         sessionErrorMessage = data['error'];
@@ -38,10 +42,20 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
       });
       return;
     }
-    
+
+    sessions = data['sessions'];
+    sessionErrorMessage = null;
+
+    for (var session in sessions) {
+      String quizName = session['quiz_name'];
+      if (sessionsByName.containsKey(quizName)) {
+        sessionsByName[quizName]!.add(session);
+      } else {
+        sessionsByName[quizName] = [session];
+      }
+    }
+
     setState(() {
-      sessions = data['sessions'];
-      sessionErrorMessage = null;
       loading = false;
     });
   }
@@ -50,14 +64,6 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
   Widget build(BuildContext context) {
     // final theme = Theme.of(context);
     // final colors = theme.colorScheme;
-
-    if (loading) {
-      return Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
 
     return Scaffold(
       body: Column(
@@ -72,19 +78,36 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
               ),
             ],
           ),
+
+          if (loading) ...[
+            Flexible(child: Center(child: CircularProgressIndicator())),
+          ] else ...[
+            buildList(),
+          ],
         ],
       ),
     );
   }
 
-  Widget buildSessionList() {
+  Widget buildList() {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+
+    if (sessions.isEmpty) {
+      return Text(
+        'Nenhuma sala encontrada.',
+        style: TextStyle(
+          backgroundColor: colors.primaryContainer,
+          color: colors.onPrimaryContainer,
+        ),
+      );
+    }
 
     return Flexible(
       child: SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: Column(
+          spacing: 10,
           children: [
             if (sessionErrorMessage != null)
               Text(
@@ -94,22 +117,95 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
                   color: colors.onError,
                 ),
               ),
-
-            for (dynamic session in sessions) ...[_buildQuizButton(sessions)],
+            if (selectedQuizName == null) ...[
+              Column(
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        selectedQuizName = null;
+                      });
+                    },
+                    child: Text('Mostrar todos os quizzes'),
+                  ),
+                  Text(
+                    'Todos os quizzes criados',
+                    style: TextStyle(
+                      color: colors.onSurface,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              _buildQuizList(),
+            ] else ...[
+              Column(
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        selectedQuizName = null;
+                      });
+                    },
+                    child: Text('Mostrar todos os quizzes'),
+                  ),
+                  Text(
+                    'Salas de "$selectedQuizName"',
+                    style: TextStyle(
+                      color: colors.onSurface,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              _buildSessionList(),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQuizButton(dynamic session) {
+  Widget _buildQuizList() {
+    return Column(
+      children: [
+        for (dynamic quizName in sessionsByName.keys) ...[
+          _buildButton(
+            quizName,
+            onTap: () {
+              setState(() {
+                selectedQuizName = quizName;
+              });
+            },
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSessionList() {
+    return Column(
+      children: [
+        for (dynamic session in sessionsByName[selectedQuizName!]) ...[
+          _buildButton(
+            session['code'],
+            onTap: () {
+              print('Selected session: ${session['code']}');
+            },
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildButton(String text, {VoidCallback? onTap}) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
     return InkWell(
-      onTap: () {
-        // loadQuizWithId(int.tryParse(quiz['id']) ?? -1);
-      },
+      onTap: onTap,
       child: Container(
         width: double.infinity,
         height: 50,
@@ -118,7 +214,7 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
         child: Row(
           children: [
             Text(
-              session['name'],
+              text,
               style: TextStyle(color: colors.onPrimaryContainer, fontSize: 18),
             ),
           ],
