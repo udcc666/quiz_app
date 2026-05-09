@@ -12,7 +12,7 @@ class ServerCommands {
       'remove_room': (id, data) => f.room.finish(id, data['pin']),
       
       // Participant Commands
-      'join_room': (id, data) => f.participant.add(id, data['name'], data['security_code'], data['pin']),
+      'join_room': (id, data) => f.participant.join(id, data['name'], data['security_code'], data['pin']),
       'leave_room': (id, data) => f.participant.leave(id, data['pin']),
 
     };

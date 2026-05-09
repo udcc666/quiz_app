@@ -7,7 +7,7 @@ class ServerParticipantFunctions {
   Server server;
   ServerParticipantFunctions(this.server);
 
-  void add(String clientId, String name, String securityCode, String pin) async {
+  void join(String socketId, String name, String securityCode, String pin) async {
     pin = pin.toUpperCase();
     Map<String, dynamic> message = {
       'type': 'join_room',
@@ -17,11 +17,12 @@ class ServerParticipantFunctions {
 
     if (!server.sessions.containsKey(pin)) {
       message['error'] = 'Session not found';
-      server.broadcast.toClient(clientId, message);
+      server.broadcast.toClient(socketId, message);
       return;
     }
     
     final session = server.sessions[pin]!;
+    message['valid_room'] = true;
 
     final Participant? participant = session.participants
       .firstWhereOrNull((p) => p.name == name);
@@ -29,13 +30,13 @@ class ServerParticipantFunctions {
     if (participant != null) {
       if (participant.securityCode != securityCode) {
         message['error'] = 'Name already taken';
-        server.broadcast.toClient(clientId, message);
+        server.broadcast.toClient(socketId, message);
         return;
       }
 
-      participant.socketId = clientId;
+      participant.socketId = socketId;
       message['success'] = true;
-      server.broadcast.toClient(clientId, message);
+      server.broadcast.toClient(socketId, message);
       server.broadcast.toHost(pin, {
         'type': 'player_joined',
         'name': name,
@@ -48,35 +49,34 @@ class ServerParticipantFunctions {
     
     if (data['success'] == false) {
       message['error'] = data['error'];
-      server.broadcast.toClient(clientId, message);
+      server.broadcast.toClient(socketId, message);
       return;
     }
 
     if (name.length < 3 || name.length > 20) {
       message['error'] = 'Name must be between 3 and 20 characters';
-      server.broadcast.toClient(clientId, message);
+      server.broadcast.toClient(socketId, message);
       return;
     }
 
     session.participants.add(Participant(
-      socketId: clientId,
+      socketId: socketId,
       dbId: data['participant_id'],
       name: name,
       securityCode: securityCode,
     ));
     
-    server.log("Client $clientId joined session '$pin'");
+    server.log(msg:"'$name' joined session '$pin'");
 
-    message['valid_room'] = true;
     message['success'] = true;
-    server.broadcast.toClient(clientId, message);
+    server.broadcast.toClient(socketId, message);
     server.broadcast.toHost(pin, {
       'type': 'player_joined',
       'name': name,
     });
   }
 
-  void leave(String clientId, String pin) {
+  void leave(String socketId, String pin) {
     pin = pin.toUpperCase();
     Map<String, dynamic> message = {
       'type': 'leave_room',
@@ -85,26 +85,26 @@ class ServerParticipantFunctions {
 
     if (!server.sessions.containsKey(pin)) {
       message['error'] = 'Session not found';
-      server.broadcast.toClient(clientId, message);
+      server.broadcast.toClient(socketId, message);
       return;
     }
     
     final session = server.sessions[pin]!;
     var participant = session.participants
-        .firstWhereOrNull((p) => p.socketId == clientId);
+        .firstWhereOrNull((p) => p.socketId == socketId);
     
     if (participant == null) {
       message['error'] = 'You are not in this room';
-      server.broadcast.toClient(clientId, message);
+      server.broadcast.toClient(socketId, message);
       return;
     }
 
     message['success'] = true;
-    server.broadcast.toClient(clientId, message);
+    server.broadcast.toClient(socketId, message);
     server.broadcast.toHost(pin, {
       'type': 'player_left',
       'name': participant.name,
     });
-    server.log("Client $clientId left session '$pin'");
+    server.log(msg:"'${participant.name}' left session '$pin'");
   }
 }

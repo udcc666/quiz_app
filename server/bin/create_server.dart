@@ -8,7 +8,7 @@ import 'server_commands.dart';
 typedef CommandHandler = void Function(String clientId, Map<String, dynamic> data);
 
 class Server {
-  bool debug = false;
+  bool debug;
 
   int port;
   String ip;
@@ -17,7 +17,7 @@ class Server {
   late final ServerFunctions functions;
   late final ServerBroadcast broadcast;
 
-  Server(this.ip, this.port) {
+  Server(this.ip, this.port, {this.debug = false}) {
     functions = ServerFunctions(this);
     broadcast = ServerBroadcast(this);
     _commands = ServerCommands.getCommands(this);
@@ -29,23 +29,28 @@ class Server {
 
   Map<String, Session> sessions = {};
 
-  void log(String msg) {
-    print(msg);
+  void log({String? msg, String? debugMsg, bool space = true}) {
+    bool canPrint = msg != null;
+    bool canPrintDebug = debug && debugMsg != null;
+    
+    if (canPrint) print(msg);
+    if (canPrintDebug) print(debugMsg);
+    if (space && (canPrint || canPrintDebug)) print('');
   }
 
   void start() async {
     if (_server != null) {
-      log("Server already started");
+      log(msg:"Server already started");
       return;
     }
 
-    log("Starting server at ${port}: ${ip}");
+    log(msg:"Starting server at ${port}: ${ip}");
 
     _server = await HttpServer.bind(ip, port);
 
-    log("Server started at ws://${_server!.address.address}:$port");
-
     await _loadServerData();
+
+    log(msg:"Server started at ws://${_server!.address.address}:$port");
 
     _server!.listen((HttpRequest request) async {
       if (WebSocketTransformer.isUpgradeRequest(request)) {
@@ -57,12 +62,12 @@ class Server {
   }
 
   Future<void> _loadServerData() async {
-    print('Loading sessions from db');
+    log(msg:'Loading sessions from db', space: false);
 
     var data = await db.session.getAll();
     
     if (data['success'] == false) {
-      log('Error loading sessions: ${data['error']}');
+      log(msg:'Error loading sessions: ${data['error']}');
       return;
     }
     
@@ -93,7 +98,7 @@ class Server {
         participants: clients,
       );
     }
-    print('Loaded ${data['sessions'].length} sessions');
+    log(msg:'Loaded ${data['sessions'].length} sessions');
   }
 
   void _on_client_connected(WebSocket socket) {
@@ -102,15 +107,15 @@ class Server {
 
     _clients[clientId] = socket;
 
-    if (debug) log('Client $clientId connected');
+    log(debugMsg:'Client $clientId connected');
     socket.listen(
       (message) {
-        if (debug) log('Message from $clientId: $message');
+        log(debugMsg:'Message from $clientId: $message');
 
         try {
           data = jsonDecode(message);
         } catch (e) {
-          log('Error parsing message: $e');
+          log(msg:'Error parsing message: $e');
           data = null;
         }
 
@@ -131,7 +136,7 @@ class Server {
     final handler = _commands[type];
 
     if (handler == null) {
-      log('Unknown message type: ${data['type']}');
+      log(msg:'Unknown message type: ${data['type']}');
       return;
     }
 
