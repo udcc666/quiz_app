@@ -29,13 +29,16 @@ class Server {
 
   Map<String, Session> sessions = {};
 
-  void log({String? msg, String? debugMsg, bool space = true}) {
+  void log({String? msg, String? debugMsg}) {
     bool canPrint = msg != null;
     bool canPrintDebug = debug && debugMsg != null;
     
+    if (canPrintDebug) print('');
+
     if (canPrint) print(msg);
     if (canPrintDebug) print(debugMsg);
-    if (space && (canPrint || canPrintDebug)) print('');
+
+    if (canPrintDebug) print('');
   }
 
   void start() async {
@@ -140,7 +143,7 @@ class Server {
       return;
     }
 
-    handler!(clientId, data);
+    handler(clientId, data);
   }
 }
 
