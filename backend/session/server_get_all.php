@@ -2,25 +2,37 @@
 require_once "../conn.php";
 require_once "../headers.php";
 
+function get_participants($conn, $quiz_id) {
+  $stmt = $conn->prepare("
+    SELECT id, username, recovery_code
+    FROM participants
+    WHERE session_id = ?
+  ");
+  $stmt->bind_param("i", $quiz_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+
+  $participants = $result->fetch_all(MYSQLI_ASSOC);
+
+  $stmt->close();
+
+  return $participants;
+}
+
 $conn = db_connect();
 
 $stmt = $conn->prepare("
-  SELECT * FROM sessions
-  where status != 'FINISHED';
+  SELECT id, quiz_id, host_id, code
+  FROM sessions
+  WHERE status != 'FINISHED';
 ");
 $stmt->execute();
-
 $result = $stmt->get_result();
 
-$sessions = [];
-while ($row = $result->fetch_assoc()) {
-  $stmt = $conn->prepare("
-    SELECT * FROM sessions
-    where status != 'FINISHED';
-  ");
-  $stmt->execute();
-  
-  $sessions[] = $row;
+$sessions = $result->fetch_all(MYSQLI_ASSOC); 
+
+foreach ($sessions as $key => $session) {
+  $sessions[$key]['participants'] = get_participants($conn, $session['id']);
 }
 
 echo json_encode(["success" => true, "sessions" => $sessions]);

@@ -18,7 +18,9 @@ $stmt = $conn->prepare("
     FROM sessions s
     JOIN quizzes q ON s.quiz_id = q.id
     WHERE s.host_id = ?
-    ORDER BY s.quiz_id ASC
+    ORDER BY 
+        FIELD(s.status, 'LOBBY', 'ACTIVE', 'FINISHED', ''), 
+        s.quiz_id ASC
 ");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
