@@ -6,7 +6,6 @@ final Map<String, String> _headers = {
   'Content-Type': 'application/json; charset=UTF-8',
 };
 
-// Função privada auxiliar para processar qualquer pedido
 Future<Map<String, dynamic>> _processRequest(Future<http.Response> request) async {
   try {
     final response = await request;
@@ -17,7 +16,6 @@ Future<Map<String, dynamic>> _processRequest(Future<http.Response> request) asyn
   }
 }
 
-// Agrupamento para Sessions
 class session {
   static Future<Map<String, dynamic>> getAll() {
     return _processRequest(http.get(Uri.parse('$_host/session/server_get_all.php')));
@@ -44,7 +42,6 @@ class session {
   }
 }
 
-// Agrupamento para Participants
 class participant {
   static Future<Map<String, dynamic>> add(int sessionId, String name, String code, DateTime date) {
     return _processRequest(

@@ -3,11 +3,11 @@ import 'create_server.dart';
 import 'classes.dart';
 import 'server_db_functions.dart' as db;
 
-class ServerClientFunctions {
+class ServerParticipantFunctions {
   Server server;
-  ServerClientFunctions(this.server);
+  ServerParticipantFunctions(this.server);
 
-  void joinRoom(String clientId, String name, String securityCode, String pin) async {
+  void add(String clientId, String name, String securityCode, String pin) async {
     pin = pin.toUpperCase();
     Map<String, dynamic> message = {
       'type': 'join_room',
@@ -15,14 +15,13 @@ class ServerClientFunctions {
       'valid_room': false,
     };
 
-    // Checks
     if (!server.sessions.containsKey(pin)) {
       message['error'] = 'Session not found';
       server.broadcast2Client(clientId, message);
       return;
     }
+    
     final session = server.sessions[pin]!;
-
     final Participant? participant = session.participants
       .firstWhereOrNull((p) => p.name == name);
 
@@ -33,10 +32,7 @@ class ServerClientFunctions {
         return;
       }
 
-      // Success
-
       participant.socketId = clientId;
-
       message['success'] = true;
       server.broadcast2Client(clientId, message);
       server.broadcast2Host(pin, {
@@ -46,7 +42,6 @@ class ServerClientFunctions {
       return;
     }
 
-    // Add to db
     final data = await db.participant.add(
         session.dbId, name, securityCode, DateTime.now());
     
@@ -56,25 +51,22 @@ class ServerClientFunctions {
       return;
     }
 
-    final participantId = data['participant_id'];
-    message['valid_room'] = true;
-
     if (name.length < 3 || name.length > 20) {
       message['error'] = 'Name must be between 3 and 20 characters';
       server.broadcast2Client(clientId, message);
       return;
     }
 
-    // Success
     session.participants.add(Participant(
       socketId: clientId,
-      dbId: participantId,
+      dbId: data['participant_id'],
       name: name,
       securityCode: securityCode,
     ));
     
-    server.log("Client $clientId joined session \'$pin\'");
+    server.log("Client $clientId joined session '$pin'");
 
+    message['valid_room'] = true;
     message['success'] = true;
     server.broadcast2Client(clientId, message);
     server.broadcast2Host(pin, {
@@ -83,21 +75,20 @@ class ServerClientFunctions {
     });
   }
 
-  void leaveRoom(String clientId, String pin) {
+  void left(String clientId, String pin) {
     pin = pin.toUpperCase();
     Map<String, dynamic> message = {
       'type': 'leave_room',
       'success': false,
     };
 
-    // Checks
     if (!server.sessions.containsKey(pin)) {
       message['error'] = 'Session not found';
       server.broadcast2Client(clientId, message);
       return;
     }
+    
     final session = server.sessions[pin]!;
-
     var participant = session.participants
         .firstWhereOrNull((p) => p.socketId == clientId);
     
@@ -106,7 +97,6 @@ class ServerClientFunctions {
       server.broadcast2Client(clientId, message);
       return;
     }
-    //session.participants.remove(participant);
 
     message['success'] = true;
     server.broadcast2Client(clientId, message);
@@ -114,6 +104,6 @@ class ServerClientFunctions {
       'type': 'player_left',
       'name': participant.name,
     });
-    server.log("Client $clientId left session \'$pin\'");
+    server.log("Client $clientId left session '$pin'");
   }
 }

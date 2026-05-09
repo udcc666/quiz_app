@@ -149,7 +149,7 @@ class Server {
     switch (data['type']) {
       // Host
       case 'add_room':
-        functions.host.addRoom(
+        functions.room.add(
           clientId, 
           data['user_id'], 
           data['quiz_id'], 
@@ -157,15 +157,15 @@ class Server {
         );
         break;
       case 'remove_room':
-        functions.host.removeRoom(clientId, data['pin']);
+        functions.room.finish(clientId, data['pin']);
         break;
         
       // Client
       case 'join_room':
-        functions.client.joinRoom(clientId, data['name'], data['security_code'], data['pin']);
+        functions.participant.add(clientId, data['name'], data['security_code'], data['pin']);
         break;
       case 'leave_room':
-        functions.client.leaveRoom(clientId, data['pin']);
+        functions.participant.left(clientId, data['pin']);
         break;
       
     }
