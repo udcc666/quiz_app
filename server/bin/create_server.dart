@@ -11,9 +11,11 @@ class Server {
   String ip;
 
   late final ServerFunctions functions;
+  late final ServerBroadcast broadcast;
 
   Server(this.ip, this.port) {
     functions = ServerFunctions(this);
+    broadcast = ServerBroadcast(this);
   }
 
   HttpServer? _server;
@@ -117,31 +119,6 @@ class Server {
     );
   }
 
-  void broadcast2Client(String clientId, Map<String, dynamic> message) {
-    var msg = jsonEncode(message);
-    var client = _clients[clientId];
-
-    if (client != null) {
-      if (client.readyState == WebSocket.open) {
-        if (debug) log("Sending to $clientId: $msg");
-        client.add(msg);
-      }
-    }
-  }
-
-  void broadcast2Room(String pin, Map<String, dynamic> message) {
-    if (!sessions.containsKey(pin)) return;
-
-    for (var participant in sessions[pin]!.participants) {
-      broadcast2Client(participant.socketId, message);
-    }
-  }
-  void broadcast2Host(String pin, Map<String, dynamic> message) {
-    if (!sessions.containsKey(pin)) return;
-    
-    broadcast2Client(sessions[pin]!.hostSocketID, message);
-  }
-
   void _handle_data(String clientId, dynamic data) {
     if (data['type'] == null) {
       return;
@@ -165,9 +142,11 @@ class Server {
         functions.participant.add(clientId, data['name'], data['security_code'], data['pin']);
         break;
       case 'leave_room':
-        functions.participant.left(clientId, data['pin']);
+        functions.participant.leave(clientId, data['pin']);
         break;
       
+      default:
+        log('Unknown message type: ${data['type']}');
     }
     /*switch (data['type']){
       // Host
@@ -215,7 +194,41 @@ class Server {
 
       default:
         log('Unknown message type: ${data['type']}');
-        break;
     }*/
+  }
+}
+
+class ServerBroadcast {
+  final Server server;
+  ServerBroadcast(this.server);
+
+  void toClient(String clientId, Map<String, dynamic> message) {
+    final socket = server._clients[clientId];
+    if (socket != null) {
+      socket.add(jsonEncode(message));
+    }
+  }
+
+  void toHost(String pin, Map<String, dynamic> message) {
+    final session = server.sessions[pin];
+    if (session != null && session.hostSocketID.isNotEmpty) {
+      toClient(session.hostSocketID, message);
+    }
+  }
+
+  void toRoom(String pin, Map<String, dynamic> message) {
+    final session = server.sessions[pin];
+    if (session == null) return;
+
+    for (var participant in session.participants) {
+      if (participant.socketId.isNotEmpty) {
+        toClient(participant.socketId, message);
+      }
+    }
+  }
+
+  void toAllInRoom(String pin, Map<String, dynamic> message) {
+    toHost(pin, message);
+    toRoom(pin, message);
   }
 }

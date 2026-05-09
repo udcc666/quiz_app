@@ -15,7 +15,7 @@ class ServerRoomFunctions {
     final data = await db.session.create(userId, quizId, settings);
     if (data['success'] == false) {
       message['error'] = data['error'];
-      server.broadcast2Client(hostId, message);
+      server.broadcast.toClient(hostId, message);
       return;
     }
     
@@ -33,7 +33,7 @@ class ServerRoomFunctions {
 
     message['success'] = true;
     message['pin'] = pin;
-    server.broadcast2Client(hostId, message);
+    server.broadcast.toClient(hostId, message);
   }
 
   void finish(String hostId, String pin) async {
@@ -44,7 +44,7 @@ class ServerRoomFunctions {
 
     if (!server.sessions.containsKey(pin)) {
       message['error'] = 'Session not found';
-      server.broadcast2Client(hostId, message);
+      server.broadcast.toClient(hostId, message);
       return;
     }
 
@@ -52,7 +52,7 @@ class ServerRoomFunctions {
 
     if (session.hostSocketID != hostId) {
       message['error'] = 'You are not the host of this session';
-      server.broadcast2Client(hostId, message);
+      server.broadcast.toClient(hostId, message);
       return;
     }
 
@@ -61,6 +61,6 @@ class ServerRoomFunctions {
     server.log("Removed session '$pin'");
 
     message['success'] = true;
-    server.broadcast2Client(hostId, message);
+    server.broadcast.toClient(hostId, message);
   }
 }

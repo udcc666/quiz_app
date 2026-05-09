@@ -17,25 +17,26 @@ class ServerParticipantFunctions {
 
     if (!server.sessions.containsKey(pin)) {
       message['error'] = 'Session not found';
-      server.broadcast2Client(clientId, message);
+      server.broadcast.toClient(clientId, message);
       return;
     }
     
     final session = server.sessions[pin]!;
+
     final Participant? participant = session.participants
       .firstWhereOrNull((p) => p.name == name);
 
     if (participant != null) {
       if (participant.securityCode != securityCode) {
         message['error'] = 'Name already taken';
-        server.broadcast2Client(clientId, message);
+        server.broadcast.toClient(clientId, message);
         return;
       }
 
       participant.socketId = clientId;
       message['success'] = true;
-      server.broadcast2Client(clientId, message);
-      server.broadcast2Host(pin, {
+      server.broadcast.toClient(clientId, message);
+      server.broadcast.toHost(pin, {
         'type': 'player_joined',
         'name': name,
       });
@@ -47,13 +48,13 @@ class ServerParticipantFunctions {
     
     if (data['success'] == false) {
       message['error'] = data['error'];
-      server.broadcast2Client(clientId, message);
+      server.broadcast.toClient(clientId, message);
       return;
     }
 
     if (name.length < 3 || name.length > 20) {
       message['error'] = 'Name must be between 3 and 20 characters';
-      server.broadcast2Client(clientId, message);
+      server.broadcast.toClient(clientId, message);
       return;
     }
 
@@ -68,14 +69,14 @@ class ServerParticipantFunctions {
 
     message['valid_room'] = true;
     message['success'] = true;
-    server.broadcast2Client(clientId, message);
-    server.broadcast2Host(pin, {
+    server.broadcast.toClient(clientId, message);
+    server.broadcast.toHost(pin, {
       'type': 'player_joined',
       'name': name,
     });
   }
 
-  void left(String clientId, String pin) {
+  void leave(String clientId, String pin) {
     pin = pin.toUpperCase();
     Map<String, dynamic> message = {
       'type': 'leave_room',
@@ -84,7 +85,7 @@ class ServerParticipantFunctions {
 
     if (!server.sessions.containsKey(pin)) {
       message['error'] = 'Session not found';
-      server.broadcast2Client(clientId, message);
+      server.broadcast.toClient(clientId, message);
       return;
     }
     
@@ -94,13 +95,13 @@ class ServerParticipantFunctions {
     
     if (participant == null) {
       message['error'] = 'You are not in this room';
-      server.broadcast2Client(clientId, message);
+      server.broadcast.toClient(clientId, message);
       return;
     }
 
     message['success'] = true;
-    server.broadcast2Client(clientId, message);
-    server.broadcast2Host(pin, {
+    server.broadcast.toClient(clientId, message);
+    server.broadcast.toHost(pin, {
       'type': 'player_left',
       'name': participant.name,
     });
