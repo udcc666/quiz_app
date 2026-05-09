@@ -50,7 +50,7 @@ class Client {
     return global.client.onMessage.where((data) => data['type'] == type).first;
   }
 
-  Future<Map<String, dynamic>> joinRoom(String name, String pin) async {
+  Future<Map<String, dynamic>> joinRoom(String name, String securityCode, String pin) async {
     if (!global.client.isConnected) {
       print("Not connected");
       return {'success': false, 'message': 'Not connected to server'};
@@ -59,6 +59,7 @@ class Client {
     return await getData('join_room', {
       'type': 'join_room',
       'name': name,
+      'security_code': securityCode,
       'pin': pin,
     });
   }

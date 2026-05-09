@@ -7,6 +7,7 @@
       "name": "quizz_server",
       "version": "0.0.0",
       "dependencies": [
+        "collection",
         "http"
       ],
       "devDependencies": []
@@ -20,6 +21,11 @@
         "meta",
         "web"
       ]
+    },
+    {
+      "name": "collection",
+      "version": "1.19.1",
+      "dependencies": []
     },
     {
       "name": "web",
@@ -71,11 +77,6 @@
         "path",
         "term_glyph"
       ]
-    },
-    {
-      "name": "collection",
-      "version": "1.19.1",
-      "dependencies": []
     },
     {
       "name": "term_glyph",

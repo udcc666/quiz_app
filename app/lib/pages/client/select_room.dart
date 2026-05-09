@@ -16,6 +16,11 @@ class SelectRoomPage extends StatefulWidget {
 class _SelectRoomPageState extends State<SelectRoomPage> {
   final TextEditingController _pinController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _securityController = TextEditingController();
+
+  final FocusNode _pinFocus = FocusNode();
+  final FocusNode _nameFocus = FocusNode();
+  final FocusNode _securityFocus = FocusNode();
 
   bool loading = false;
   bool validPin = false;
@@ -27,7 +32,7 @@ class _SelectRoomPageState extends State<SelectRoomPage> {
     _pinController.text = widget.pin ?? '';
   }
 
-  void tryConnect({bool isFirstCheck = false}) async {
+  void tryConnect() async {
     if (loading) return;
 
     setState(() {
@@ -36,12 +41,22 @@ class _SelectRoomPageState extends State<SelectRoomPage> {
 
     String pin = _pinController.text.trim();
     String name = _nameController.text.trim();
+    String securityCode = _securityController.text.trim();
 
-    final data = await server.client.joinRoom(name, pin);
+    if ([pin, name, securityCode].contains('')) {
+      setState(() {
+        loading = false;
+        validPin = false;
+        errorMessage = 'Missing parameters';
+      });
+      return;
+    }
+
+    final data = await server.client.joinRoom(name, securityCode, pin);
 
     if (data['success']) {
       if (!mounted) return;
-      context.go('/client/room/${pin}');
+      context.go('/client/room/$pin');
       return;
     }
 
@@ -49,11 +64,6 @@ class _SelectRoomPageState extends State<SelectRoomPage> {
       loading = false;
       validPin = data['valid_room'];
       errorMessage = data['error'];
-      if (isFirstCheck) {
-        if (validPin) {
-          errorMessage = null;
-        }
-      }
     });
   }
 
@@ -92,14 +102,24 @@ class _SelectRoomPageState extends State<SelectRoomPage> {
                     ),
                   TextField(
                     controller: _pinController,
+                    focusNode: _pinFocus,
                     decoration: InputDecoration(labelText: 'Pin da sala'),
                     onSubmitted: (_) {
-                      tryConnect();
+                      _nameFocus.requestFocus();
                     },
                   ),
                   TextField(
                     controller: _nameController,
+                    focusNode: _nameFocus,
                     decoration: InputDecoration(labelText: 'Nome'),
+                    onSubmitted: (_) {
+                      _securityFocus.requestFocus();
+                    },
+                  ),
+                  TextField(
+                    controller: _securityController,
+                    focusNode: _securityFocus,
+                    decoration: InputDecoration(labelText: 'Codigo de segurança'),
                     onSubmitted: (_) {
                       tryConnect();
                     },

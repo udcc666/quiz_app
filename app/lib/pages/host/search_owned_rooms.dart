@@ -183,6 +183,7 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
         for (dynamic session in sessionsByName[selectedQuizName!]) ...[
           _buildButton(
             session['code'],
+            colorIndex: ['LOBBY', 'ACTIVE', 'FINISHED'].indexOf(session['status'])+1,
             onTap: () {
               print('Selected session: ${session['code']}');
             },
@@ -192,22 +193,35 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
     );
   }
 
-  Widget _buildButton(String text, {VoidCallback? onTap}) {
+  Widget _buildButton(String text,{VoidCallback? onTap, int colorIndex = 0}) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+
+    final buttonCollors = [
+      colors.primaryContainer,
+      Colors.yellow,
+      Colors.green,
+      Color(0xFF444444),
+    ];
+    final buttonTextCollors = [
+      colors.onPrimaryContainer,
+      Colors.black,
+      Colors.white,
+      Colors.white,
+    ];
 
     return InkWell(
       onTap: onTap,
       child: Container(
         width: double.infinity,
         height: 50,
-        color: colors.primaryContainer,
+        color: buttonCollors[colorIndex],
         padding: EdgeInsets.all(5),
         child: Row(
           children: [
             Text(
               text,
-              style: TextStyle(color: colors.onPrimaryContainer, fontSize: 18),
+              style: TextStyle(color: buttonTextCollors[colorIndex], fontSize: 18),
             ),
           ],
         ),

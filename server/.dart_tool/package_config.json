@@ -75,8 +75,8 @@
     }
   ],
   "generator": "pub",
-  "generatorVersion": "3.10.4",
-  "flutterRoot": "file:///C:/!Dev/flutter",
-  "flutterVersion": "3.38.5",
+  "generatorVersion": "3.11.5",
+  "flutterRoot": "file:///C:/Dev/flutter",
+  "flutterVersion": "3.41.7",
   "pubCache": "file:///C:/Users/udcc6/AppData/Local/Pub/Cache"
 }
