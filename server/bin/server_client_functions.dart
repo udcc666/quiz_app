@@ -1,12 +1,12 @@
 import 'create_server.dart';
 
-// import 'server_db_functions.dart' as db;
+import 'server_db_functions.dart' as db;
 
 class ServerClientFunctions {
   Server server;
   ServerClientFunctions(this.server);
 
-  void joinRoom(String clientId, String name, String pin) {
+  void joinRoom(String clientId, String name, String pin) async {
     pin = pin.toUpperCase();
     Map<String, dynamic> message = {
       'type': 'join_room',
@@ -17,6 +17,16 @@ class ServerClientFunctions {
     // Checks
     if (!server.sessions.containsKey(pin)) {
       message['error'] = 'Session not found';
+      server.broadcast2Client(clientId, message);
+      return;
+    }
+
+    // Add to db
+    final data = await db.addParticipant(
+        server.sessions[pin]['id'], name, 'qwer', DateTime.now());
+    
+    if (data['success'] == false) {
+      message['error'] = 'DB: ${data['error']}';
       server.broadcast2Client(clientId, message);
       return;
     }

@@ -120,14 +120,6 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
             if (selectedQuizName == null) ...[
               Column(
                 children: [
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        selectedQuizName = null;
-                      });
-                    },
-                    child: Text('Mostrar todos os quizzes'),
-                  ),
                   Text(
                     'Todos os quizzes criados',
                     style: TextStyle(

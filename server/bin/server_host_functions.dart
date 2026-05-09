@@ -22,7 +22,12 @@ class ServerHostFunctions {
     final pin = data['session_code'];
 
     // Success
-    server.sessions[pin] = {'host': hostId, 'clients': []};
+    server.sessions[pin] = {
+      'id': data['session_id'],
+      'quiz_id': quizId,
+      'host': hostId, 
+      'clients': []
+    };
 
     server.log("Created session \'$pin\'");
 
@@ -50,7 +55,7 @@ class ServerHostFunctions {
     }
 
     // Remove
-    await db.deleteSession(pin);
+    await db.finishSession(pin);
 
     server.sessions.remove(pin);
     server.log("Removed session \'$pin\'");

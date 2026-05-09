@@ -121,6 +121,7 @@ $stmt->execute();
 
 echo json_encode([
     'success' => true,
+    'session_id' => $stmt->insert_id,
     'session_code' => $code,
 ]);
 
