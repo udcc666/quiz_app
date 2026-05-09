@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'classes.dart';
 import 'server_functions.dart';
 import 'server_db_functions.dart' as db;
+import 'server_commands.dart';
+
+typedef CommandHandler = void Function(String clientId, Map<String, dynamic> data);
 
 class Server {
   bool debug = false;
@@ -10,12 +13,14 @@ class Server {
   int port;
   String ip;
 
+  late final Map<String, CommandHandler> _commands;
   late final ServerFunctions functions;
   late final ServerBroadcast broadcast;
 
   Server(this.ip, this.port) {
     functions = ServerFunctions(this);
     broadcast = ServerBroadcast(this);
+    _commands = ServerCommands.getCommands(this);
   }
 
   HttpServer? _server;
@@ -120,81 +125,17 @@ class Server {
   }
 
   void _handle_data(String clientId, dynamic data) {
-    if (data['type'] == null) {
+    if (data is! Map<String, dynamic> || data['type'] == null) return;
+
+    final String type = data['type'];
+    final handler = _commands[type];
+
+    if (handler == null) {
+      log('Unknown message type: ${data['type']}');
       return;
     }
-    switch (data['type']) {
-      // Host
-      case 'add_room':
-        functions.room.add(
-          clientId, 
-          data['user_id'], 
-          data['quiz_id'], 
-          data['settings']
-        );
-        break;
-      case 'remove_room':
-        functions.room.finish(clientId, data['pin']);
-        break;
-        
-      // Client
-      case 'join_room':
-        functions.participant.add(clientId, data['name'], data['security_code'], data['pin']);
-        break;
-      case 'leave_room':
-        functions.participant.leave(clientId, data['pin']);
-        break;
-      
-      default:
-        log('Unknown message type: ${data['type']}');
-    }
-    /*switch (data['type']){
-      // Host
-      case "create_room":
-        functions.host.createRoom(data['pin'], data['quizz_id'], data['name'], clientId);
-        break;
 
-      case "delete_room":
-        functions.host.deleteRoom(data['pin'], data['name'], clientId);
-        break;
-
-      case "get_players":
-        functions.host.getPlayers(data['pin'], data['name'], clientId);
-        break;
-
-      case "next":
-        functions.host.sendNext(data["pin"], data['name'], clientId);
-        break;
-
-      case "show_correct_answers":
-        functions.host.sendShowCorrectAnwers(data["pin"], data['name'], clientId);
-        break;
-
-      case "reconnect":
-        functions.host.reconnect(data["pin"], data['name'], clientId);
-        break;
-
-      // Client
-      case "join_room":
-        functions.client.joinRoom(data["pin"], clientId, data['name']);
-        break;
-
-      case "quit_room":
-        functions.client.quitRoom(data["pin"], clientId);
-        break;
-
-      case "message_to_host":
-        functions.client.send2Host(data["pin"], data["message"], clientId);
-        break;
-
-      case "send_answers":
-        //functions.client.saveAnswers(data["pin"], data["answers"], clientId);
-        break;
-
-
-      default:
-        log('Unknown message type: ${data['type']}');
-    }*/
+    handler!(clientId, data);
   }
 }
 
