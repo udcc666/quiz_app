@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 29, 2026 at 04:18 PM
+-- Generation Time: May 09, 2026 at 06:49 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,30 @@ SET time_zone = "+00:00";
 --
 -- Database: `quiz_app`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `participants`
+--
+
+CREATE TABLE `participants` (
+  `id` int(11) NOT NULL,
+  `session_id` int(11) NOT NULL,
+  `current_question` int(11) NOT NULL,
+  `username` varchar(100) NOT NULL,
+  `recovery_code` varchar(15) NOT NULL,
+  `score` int(11) NOT NULL DEFAULT 0,
+  `finished` tinyint(1) NOT NULL DEFAULT 0,
+  `started_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `participants`
+--
+
+INSERT INTO `participants` (`id`, `session_id`, `current_question`, `username`, `recovery_code`, `score`, `finished`, `started_at`) VALUES
+(1, 1, 0, 'Nelson', 'qwer', 0, 0, '2026-05-07 11:53:42');
 
 -- --------------------------------------------------------
 
@@ -75,9 +99,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `quiz_id`, `host_id`, `code`, `current_question`, `status`, `host_controlled`, `allow_late_entry`, `max_clients`, `show_leaderboard_between_questions`, `show_answers`, `duration`, `start_at_host`) VALUES
-(8, 2, 1, '80O9Z4N', NULL, 'LOBBY', 0, 1, NULL, 0, 1, NULL, 0),
-(9, 2, 1, '3SU2', NULL, 'LOBBY', 0, 1, NULL, 0, 1, NULL, 0),
-(10, 2, 1, 'PQIQRPZ3J', NULL, 'LOBBY', 0, 1, NULL, 0, 1, NULL, 0);
+(1, 1, 1, '4M7AQ18DW', NULL, 'FINISHED', 0, 1, NULL, 0, 1, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -102,6 +124,13 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`) VALUES
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `participants`
+--
+ALTER TABLE `participants`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_participants_sessions` (`session_id`);
 
 --
 -- Indexes for table `quizzes`
@@ -129,6 +158,12 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `participants`
+--
+ALTER TABLE `participants`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `quizzes`
 --
 ALTER TABLE `quizzes`
@@ -138,7 +173,7 @@ ALTER TABLE `quizzes`
 -- AUTO_INCREMENT for table `sessions`
 --
 ALTER TABLE `sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -149,6 +184,12 @@ ALTER TABLE `users`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `participants`
+--
+ALTER TABLE `participants`
+  ADD CONSTRAINT `fk_participants_sessions` FOREIGN KEY (`session_id`) REFERENCES `sessions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `sessions`
