@@ -3,4 +3,5 @@ environment:
   sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
+  collection: ^1.19.1
   http: ^1.6.0

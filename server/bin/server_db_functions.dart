@@ -1,107 +1,63 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-final String host = 'http://localhost/quiz_app';
-final dynamic headers = {
+final String _host = 'http://localhost/quiz_app';
+final Map<String, String> _headers = {
   'Content-Type': 'application/json; charset=UTF-8',
 };
 
-Future<Map<String, dynamic>> createSession(
-    int userId, int quizId, Map<String, dynamic> settings) async {
-  late dynamic response;
-
+// Função privada auxiliar para processar qualquer pedido
+Future<Map<String, dynamic>> _processRequest(Future<http.Response> request) async {
   try {
-    response = await http.post(
-      Uri.parse('$host/session/create.php'),
-      headers: headers,
-      body: jsonEncode({
-        'user_id': userId,
-        'quiz_id': quizId,
-        'settings': settings,
-      }),
-    );
+    final response = await request;
+    if (response.statusCode == 200) return json.decode(response.body);
+    return {'success': false, 'error': 'Erro: ${response.statusCode}'};
   } catch (e) {
-    return {'success': false, 'error': 'Failed to connect to backend'};
+    return {'success': false, 'error': 'Falha na conexão: $e'};
   }
-
-  if (response.statusCode != 200) {
-    return {
-      'success': false,
-      'error': 'Backend returned code ${response.statusCode}'
-    };
-  }
-
-  return json.decode(response.body);
 }
 
-Future<Map<String, dynamic>> finishSession(String pin) async {
-  late dynamic response;
+// Agrupamento para Sessions
+class session {
+  static Future<Map<String, dynamic>> getAll() {
+    return _processRequest(http.get(Uri.parse('$_host/session/server_get_all.php')));
+  }
 
-  try {
-    response = await http.post(
-      Uri.parse('$host/session/finish.php'),
-      headers: headers,
-      body: jsonEncode({
-        'pin': pin,
-      }),
+  static Future<Map<String, dynamic>> create(int userId, int quizId, Map<String, dynamic> settings) {
+    return _processRequest(
+      http.post(
+        Uri.parse('$_host/session/create.php'),
+        headers: _headers,
+        body: jsonEncode({'user_id': userId, 'quiz_id': quizId, 'settings': settings}),
+      ),
     );
-  } catch (e) {
-    return {'success': false, 'error': 'Failed to connect to backend'};
   }
 
-  if (response.statusCode != 200) {
-    return {
-      'success': false,
-      'error': 'Backend returned code ${response.statusCode}'
-    };
+  static Future<Map<String, dynamic>> finish(String pin) {
+    return _processRequest(
+      http.post(
+        Uri.parse('$_host/session/finish.php'),
+        headers: _headers,
+        body: jsonEncode({'pin': pin}),
+      ),
+    );
   }
-
-  return json.decode(response.body);
 }
 
-
-Future<Map<String, dynamic>> addParticipant(
-  int session_id,
-  String username,
-  String recovery_code,
-  DateTime started_at,
-) async {
-  late dynamic response;
-
-  try {
-    response = await http.post(
-      Uri.parse('$host/participants/create.php'),
-      headers: headers,
-      body: jsonEncode({
-        'session_id': session_id,
-        'username': username,
-        'recovery_code': recovery_code,
-        'started_at': started_at.toIso8601String(),
-      }),
+// Agrupamento para Participants
+class participant {
+  static Future<Map<String, dynamic>> add(int sessionId, String name, String code, DateTime date) {
+    return _processRequest(
+      http.post(
+        Uri.parse('$_host/participants/create.php'),
+        headers: _headers,
+        body: jsonEncode({
+          'session_id': sessionId,
+          'username': name,
+          'recovery_code': code,
+          'started_at': date.toIso8601String(),
+        }),
+      ),
     );
-  } catch (e) {
-    return {'success': false, 'error': 'Failed to connect to backend'};
   }
-
-  if (response.statusCode != 200) {
-    return {
-      'success': false,
-      'error': 'Backend returned code ${response.statusCode}'
-    };
-  }
-  print(response.body);
-  return json.decode(response.body);
 }
-// Future<bool> canUserEnterQuizz(int quizzId, String name) async {
-//   final response = await http.get(Uri.parse('$host/can_user_enter.php?quizz_id=$quizzId&name=$name'));
-//   if (response.statusCode != 200) {
-//     throw Exception('Failed to load quizzes');
-//   }
-//   dynamic quizzes = jsonDecode(response.body);
-
-//   if (quizzes['success'] == false){
-//     return false;
-//   }
-
-//   return quizzes['can_enter'];
-// }

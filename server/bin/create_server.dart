@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'dart:convert';
-
+import 'classes.dart';
 import 'server_functions.dart';
+import 'server_db_functions.dart' as db;
 
 class Server {
   bool debug = false;
@@ -19,7 +20,7 @@ class Server {
 
   Map<String, WebSocket> _clients = {};
 
-  Map<String, dynamic> sessions = {};
+  Map<String, Session> sessions = {};
 
   void log(String msg) {
     print(msg);
@@ -37,6 +38,8 @@ class Server {
 
     log("Server started at ws://${_server!.address.address}:$port");
 
+    await _loadServerData();
+
     _server!.listen((HttpRequest request) async {
       if (WebSocketTransformer.isUpgradeRequest(request)) {
         WebSocket socket = await WebSocketTransformer.upgrade(request);
@@ -44,6 +47,46 @@ class Server {
         _on_client_connected(socket);
       }
     });
+  }
+
+  Future<void> _loadServerData() async {
+    print('Loading sessions from db');
+
+    var data = await db.session.getAll();
+    
+    if (data['success'] == false) {
+      log('Error loading sessions: ${data['error']}');
+      return;
+    }
+    
+    for (var session in data['sessions']) {
+      List<Participant> clients = [];
+
+      for (var client in session['participants']) {
+        /**{
+          'id': '',  // id = clientId
+          'participant_id': client['id'],
+          'name': client['username'],
+          'security_code': client['recovery_code'],
+        } */
+        clients.add(Participant(
+            socketId: '',
+            dbId: client['id'],
+            name: client['username'],
+            securityCode: client['recovery_code'],
+          ),
+        );
+      }
+    
+      sessions[session['code']] = Session(
+        dbId: session['id'],
+        quizId: session['quiz_id'],
+        hostUserId: session['host_id'],
+        hostSocketID: '',
+        participants: clients,
+      );
+    }
+    print('Loaded ${data['sessions'].length} sessions');
   }
 
   void _on_client_connected(WebSocket socket) {
@@ -89,16 +132,14 @@ class Server {
   void broadcast2Room(String pin, Map<String, dynamic> message) {
     if (!sessions.containsKey(pin)) return;
 
-    List<dynamic> players = sessions[pin]['players'];
-
-    for (var clientId in players) {
-      broadcast2Client(clientId, message);
+    for (var participant in sessions[pin]!.participants) {
+      broadcast2Client(participant.socketId, message);
     }
   }
   void broadcast2Host(String pin, Map<String, dynamic> message) {
     if (!sessions.containsKey(pin)) return;
     
-    broadcast2Client(sessions[pin]['host'], message);
+    broadcast2Client(sessions[pin]!.hostSocketID, message);
   }
 
   void _handle_data(String clientId, dynamic data) {
@@ -109,7 +150,11 @@ class Server {
       // Host
       case 'add_room':
         functions.host.addRoom(
-            clientId, data['user_id'], data['quiz_id'], data['settings']);
+          clientId, 
+          data['user_id'], 
+          data['quiz_id'], 
+          data['settings']
+        );
         break;
       case 'remove_room':
         functions.host.removeRoom(clientId, data['pin']);
@@ -117,7 +162,7 @@ class Server {
         
       // Client
       case 'join_room':
-        functions.client.joinRoom(clientId, data['name'], data['pin']);
+        functions.client.joinRoom(clientId, data['name'], data['security_code'], data['pin']);
         break;
       case 'leave_room':
         functions.client.leaveRoom(clientId, data['pin']);

@@ -1,12 +1,13 @@
+import 'package:collection/collection.dart';
 import 'create_server.dart';
-
+import 'classes.dart';
 import 'server_db_functions.dart' as db;
 
 class ServerClientFunctions {
   Server server;
   ServerClientFunctions(this.server);
 
-  void joinRoom(String clientId, String name, String pin) async {
+  void joinRoom(String clientId, String name, String securityCode, String pin) async {
     pin = pin.toUpperCase();
     Map<String, dynamic> message = {
       'type': 'join_room',
@@ -20,17 +21,42 @@ class ServerClientFunctions {
       server.broadcast2Client(clientId, message);
       return;
     }
+    final session = server.sessions[pin]!;
+
+    final Participant? participant = session.participants
+      .firstWhereOrNull((p) => p.name == name);
+
+    if (participant != null) {
+      if (participant.securityCode != securityCode) {
+        message['error'] = 'Name already taken';
+        server.broadcast2Client(clientId, message);
+        return;
+      }
+
+      // Success
+
+      participant.socketId = clientId;
+
+      message['success'] = true;
+      server.broadcast2Client(clientId, message);
+      server.broadcast2Host(pin, {
+        'type': 'player_joined',
+        'name': name,
+      });
+      return;
+    }
 
     // Add to db
-    final data = await db.addParticipant(
-        server.sessions[pin]['id'], name, 'qwer', DateTime.now());
+    final data = await db.participant.add(
+        session.dbId, name, securityCode, DateTime.now());
     
     if (data['success'] == false) {
-      message['error'] = 'DB: ${data['error']}';
+      message['error'] = data['error'];
       server.broadcast2Client(clientId, message);
       return;
     }
 
+    final participantId = data['participant_id'];
     message['valid_room'] = true;
 
     if (name.length < 3 || name.length > 20) {
@@ -39,18 +65,14 @@ class ServerClientFunctions {
       return;
     }
 
-    if (server.sessions[pin]['clients']
-        .any((client) => client['name'] == name)) {
-      message['error'] = 'Name already taken';
-      server.broadcast2Client(clientId, message);
-      return;
-    }
-
     // Success
-    server.sessions[pin]['clients'].add({
-      'id': clientId,
-      'name': name,
-    });
+    session.participants.add(Participant(
+      socketId: clientId,
+      dbId: participantId,
+      name: name,
+      securityCode: securityCode,
+    ));
+    
     server.log("Client $clientId joined session \'$pin\'");
 
     message['success'] = true;
@@ -74,21 +96,23 @@ class ServerClientFunctions {
       server.broadcast2Client(clientId, message);
       return;
     }
+    final session = server.sessions[pin]!;
 
-    var player = server.sessions[pin]['clients']
-        .firstWhere((client) => client['id'] == clientId, orElse: () => null);
-    if (player == null) {
+    var participant = session.participants
+        .firstWhereOrNull((p) => p.socketId == clientId);
+    
+    if (participant == null) {
       message['error'] = 'You are not in this room';
       server.broadcast2Client(clientId, message);
       return;
     }
-    server.sessions[pin]['clients'].remove(player);
+    //session.participants.remove(participant);
 
     message['success'] = true;
     server.broadcast2Client(clientId, message);
     server.broadcast2Host(pin, {
       'type': 'player_left',
-      'name': player['name'],
+      'name': participant.name,
     });
     server.log("Client $clientId left session \'$pin\'");
   }
