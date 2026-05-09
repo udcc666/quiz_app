@@ -65,7 +65,7 @@ class Server {
   }
 
   Future<void> _loadServerData() async {
-    log(msg:'Loading sessions from db', space: false);
+    log(msg:'Loading sessions from db');
 
     var data = await db.session.getAll();
     
