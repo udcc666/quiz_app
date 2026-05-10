@@ -22,8 +22,9 @@ function get_participants($conn, $quiz_id) {
 $conn = db_connect();
 
 $stmt = $conn->prepare("
-  SELECT id, quiz_id, host_id, code
-  FROM sessions
+  SELECT s.id, s.quiz_id, q.name as 'quiz_name', s.host_id, s.code, s.status
+  FROM sessions s
+  JOIN quizzes q ON s.quiz_id = q.id
   WHERE status != 'FINISHED';
 ");
 $stmt->execute();

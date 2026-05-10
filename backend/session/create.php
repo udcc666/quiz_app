@@ -65,6 +65,7 @@ if ($result->num_rows === 0) {
     $conn->close();
     exit;
 }
+$quiz = $result->fetch_assoc();
 
 $stmt->close();
 
@@ -121,6 +122,7 @@ $stmt->execute();
 
 echo json_encode([
     'success' => true,
+    'quiz_name' => $quiz['name'],
     'session_id' => $stmt->insert_id,
     'session_code' => $code,
 ]);
