@@ -2,7 +2,7 @@
 require_once '../conn.php';
 require_once '../headers.php';
 
-$id = $_GET['id'];
+$id = $_GET['id'] ?? null;
 
 if (!$id){
     echo json_encode(['success' => false, 'error' => 'Missing parameters']);
