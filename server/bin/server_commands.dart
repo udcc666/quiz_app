@@ -10,6 +10,7 @@ class ServerCommands {
       // Room Commands
       'add_room': (id, data) => f.room.add(id, data['user_id'], data['quiz_id'], data['settings']),
       'remove_room': (id, data) => f.room.finish(id, data['pin']),
+      'reconnect_host': (id, data) => f.room.reconnect(id, data['user_id'], data['pin']),
       
       // Participant Commands
       'join_room': (id, data) => f.participant.join(id, data['name'], data['security_code'], data['pin']),

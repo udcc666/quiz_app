@@ -24,6 +24,7 @@ class ServerRoomFunctions {
     server.sessions[pin] = Session(
       dbId: data['session_id'],
       quizId: quizId,
+      quizName: data['quiz_name'],
       hostUserId: userId,
       hostSocketID: socketId,
       participants: [],
@@ -81,7 +82,7 @@ class ServerRoomFunctions {
     final session = server.sessions[pin]!;
 
     if (session.hostUserId != userId) {
-      message['error'] = 'Unauthorized: You are not the host of this session';
+      message['error'] = 'You are not the host of this session';
       server.broadcast.toClient(socketId, message);
       return;
     }
@@ -91,10 +92,13 @@ class ServerRoomFunctions {
     //server.log(msg:"Host (User ID: $userId) reconnected to session '$pin'");
 
     message['success'] = true;
+    message['quiz_id'] = session.quizId;
+    message['quiz_name'] = session.quizName;
     message['pin'] = pin;
     message['participants'] = session.participants.map((p) => {
       'name': p.name,
-      'dbId': p.dbId,
+      'db_id': p.dbId,
+      'is_online': p.isOnline,
     }).toList();
 
     server.broadcast.toClient(socketId, message);

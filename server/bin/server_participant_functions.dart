@@ -35,6 +35,7 @@ class ServerParticipantFunctions {
       }
 
       participant.socketId = socketId;
+      participant.isOnline = true;
       message['success'] = true;
       server.broadcast.toClient(socketId, message);
       server.broadcast.toHost(pin, {
@@ -64,6 +65,7 @@ class ServerParticipantFunctions {
       dbId: data['participant_id'],
       name: name,
       securityCode: securityCode,
+      isOnline: true,
     ));
     
     server.log(msg:"'$name' joined session '$pin'");
@@ -98,6 +100,8 @@ class ServerParticipantFunctions {
       server.broadcast.toClient(socketId, message);
       return;
     }
+
+    participant.isOnline = false;
 
     message['success'] = true;
     server.broadcast.toClient(socketId, message);

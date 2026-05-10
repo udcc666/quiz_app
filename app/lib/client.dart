@@ -15,7 +15,7 @@ class Client {
 
   bool isConnected = false;
 
-  void tryConnect() async {
+  Future<void> tryConnect() async {
     if (isConnected) {
       print("Already connected");
       return;

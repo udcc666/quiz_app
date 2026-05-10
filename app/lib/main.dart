@@ -77,7 +77,7 @@ final _router = GoRouter(
 void main() async {
   usePathUrlStrategy();
 
-  global.client.tryConnect();
+  await global.client.tryConnect();
 
   runApp(const MainApp());
 }

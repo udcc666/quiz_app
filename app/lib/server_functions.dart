@@ -39,6 +39,19 @@ class Host {
 
     return await getData('remove_room', {'type': 'remove_room', 'pin': pin});
   }
+
+  Future<Map<String, dynamic>> reconnectHost(String pin) async {
+    if (!global.client.isConnected) {
+      print("Not connected");
+      return {'success': false, 'message': 'Not connected to server'};
+    }
+
+    return await getData('reconnect_host', {
+      'type': 'reconnect_host',
+      'user_id': global.userId,
+      'pin': pin,
+    });
+  }
 }
 
 class Client {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_app/db_functions.dart' as db;
 import 'package:quiz_app/global.dart' as global;
-// import 'package:quiz_app/server_functions.dart' as server;
+import 'package:quiz_app/server_functions.dart' as server;
 
 class SearchOwnedRoomsPage extends StatefulWidget {
   const SearchOwnedRoomsPage({super.key});
@@ -58,6 +58,17 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
     setState(() {
       loading = false;
     });
+  }
+
+  void reconnect(String pin) async {
+    final data = await server.host.reconnectHost(pin);
+    if (data['success'] == false) {
+      print('error: ${data['error']}');
+      return;
+    }
+
+    if (!mounted) return;
+    context.go('/host/monitor/$pin');
   }
 
   @override
@@ -185,7 +196,10 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
             session['code'],
             colorIndex: ['LOBBY', 'ACTIVE', 'FINISHED'].indexOf(session['status'])+1,
             onTap: () {
-              print('Selected session: ${session['code']}');
+              print('Selected session: ${session['code']} (${session['status']})');
+              if (session['status'] != 'FINISHED') {
+                reconnect(session['code']);
+              }
             },
           ),
         ],

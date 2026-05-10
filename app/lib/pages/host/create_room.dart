@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quiz_app/classes.dart';
 import 'package:quiz_app/db_functions.dart' as db;
 import 'package:quiz_app/global.dart' as global;
 import 'package:quiz_app/server_functions.dart' as server;
@@ -18,8 +19,8 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
 
   dynamic quiz;
 
-  Map<String, dynamic> defaultSettings = {};
-  Map<String, dynamic> settings = {};
+  Settings defaultSettings = Settings();
+  Settings settings = Settings();
 
   bool useDefaultSettings = true;
 
@@ -41,17 +42,8 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     dynamic data = await db.getQuizWithId(widget.quizId);
     setState(() {
       quiz = data['quiz'];
-      defaultSettings = {
-        'host_controlled': quiz['host_controlled'],
-        'duration': quiz['duration'],
-        'max_clients': quiz['max_clients'],
-        'show_leaderboard_between_questions':
-            quiz['show_leaderboard_between_questions'],
-        'show_answers': quiz['show_answers'],
-        'allow_late_entry': quiz['allow_late_entry'],
-        'start_at_host': quiz['start_at_host'],
-      };
-      settings = defaultSettings.map((key, value) => MapEntry(key, value));
+      defaultSettings.loadJson(quiz);
+      settings.loadJson(quiz);
     });
   }
 
@@ -62,15 +54,17 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
       errorMessage = '';
     });
 
-    final Map<String, dynamic> selectedSettings = useDefaultSettings
+    final Settings selectedSettings = useDefaultSettings
         ? defaultSettings
         : settings;
 
     final data = await server.host.addRoom(
       global.userId!,
       widget.quizId,
-      selectedSettings,
+      selectedSettings.toJson(),
     );
+
+    if (!mounted) return;
 
     if (!data['success']) {
       print('Failed to create session: ${data['error']}');
@@ -81,9 +75,14 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
       return;
     }
 
+    global.room = Room(
+      pin: data['pin'],
+      name: quiz['name'],
+      quizId: widget.quizId,
+    );
+
     print('Session created with code \'${data['pin']}\'');
     
-    if (!mounted) return;
     context.go('/host/monitor/${data['pin']}');
   }
 
@@ -154,7 +153,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
   }
 
   Widget buildQuizOptions() {
-    final hostControlled = settings['host_controlled'] ?? false;
+    final hostControlled = settings.hostControlled;
 
     return customExpansionTile(
       title: const Text('Definições'),
@@ -295,14 +294,16 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     // final theme = Theme.of(context);
     // final colors = theme.colorScheme;
 
+    final defaultSettingsJson = defaultSettings.toJson();
+
     final Map<String, dynamic> selectedSettings = useDefaultSettings
-        ? defaultSettings
-        : settings;
+        ? defaultSettingsJson
+        : settings.toJson();
 
     return _buildCheckbox(
       label,
       selectedSettings[key],
-      isModified: selectedSettings[key] != defaultSettings[key],
+      isModified: selectedSettings[key] != defaultSettingsJson[key],
       active: active,
 
       onChanged: (bool? newValue) {
@@ -316,7 +317,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
         });
       },
       onModifiedPressed: () =>
-          setState(() => selectedSettings[key] = defaultSettings[key]),
+          setState(() => selectedSettings[key] = defaultSettingsJson[key]),
     );
   }
 
@@ -329,11 +330,14 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    final Map<String, dynamic> selectedSettings = useDefaultSettings
-        ? defaultSettings
-        : settings;
+    
+    final defaultSettingsJson = defaultSettings.toJson();
 
-    bool isModified = selectedSettings[key] != defaultSettings[key];
+    final Map<String, dynamic> selectedSettings = useDefaultSettings
+        ? defaultSettingsJson
+        : settings.toJson();
+
+    bool isModified = selectedSettings[key] != defaultSettingsJson[key];
     bool isNull = selectedSettings[key] == null;
 
     return Row(
@@ -355,7 +359,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                   ? IconButton(
                       icon: const Icon(Icons.restore, size: 20),
                       onPressed: () => setState(
-                        () => selectedSettings[key] = defaultSettings[key],
+                        () => selectedSettings[key] = defaultSettingsJson[key],
                       ),
                     )
                   : null,

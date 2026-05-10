@@ -78,12 +78,6 @@ class Server {
       List<Participant> clients = [];
 
       for (var client in session['participants']) {
-        /**{
-          'id': '',  // id = clientId
-          'participant_id': client['id'],
-          'name': client['username'],
-          'security_code': client['recovery_code'],
-        } */
         clients.add(Participant(
             socketId: '',
             dbId: client['id'],
@@ -96,6 +90,7 @@ class Server {
       sessions[session['code']] = Session(
         dbId: session['id'],
         quizId: session['quiz_id'],
+        quizName: session['quiz_name'],
         hostUserId: session['host_id'],
         hostSocketID: '',
         participants: clients,

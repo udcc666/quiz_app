@@ -85,6 +85,24 @@ Future<Map<String, dynamic>> getOwnedRooms(int userId) async {
   return json.decode(response.body);
 }
 
+Future<Map<String, dynamic>> getSessionWithPin(String pin) async {
+  late dynamic response;
+  try {
+    response = await http.get(
+      Uri.parse('$host/session/get_with_pin.php?pin=$pin'),
+      headers: headers,
+    );
+  } catch(e){
+    return {'success': false, 'error': 'Failed to connect to backend'};
+  }
+
+  if (response.statusCode != 200) {
+    return {'success': false, 'error': 'Backend returned code ${response.statusCode}'};
+  }
+
+  return json.decode(response.body);
+}
+
 /* Future<Map<String, dynamic>> createSession(int userId, int quizId, Map<String, dynamic> settings) async {
   late dynamic response;
   
