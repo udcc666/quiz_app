@@ -63,7 +63,6 @@ class _MonitorPageState extends State<MonitorPage> {
     );
 
     global.room!.settings.loadJson(currentSession);
-    print(data);
 
     for (var participants in data['participants']) {
       global.room!.participants[participants['name']] = Participant(

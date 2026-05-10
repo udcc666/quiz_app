@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quiz_app/classes.dart';
 import 'package:quiz_app/db_functions.dart' as db;
 import 'package:quiz_app/global.dart' as global;
 import 'package:quiz_app/server_functions.dart' as server;
@@ -60,15 +61,42 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
     });
   }
 
-  void reconnect(String pin) async {
+  void tryReconnect(String pin) async {
     final data = await server.host.reconnectHost(pin);
+    
+    if (!mounted) return;
+
     if (data['success'] == false) {
       print('error: ${data['error']}');
+      context.go('/');
       return;
     }
 
+    final dbData = await db.getSessionWithPin(data['pin']);
     if (!mounted) return;
+    if (dbData['success'] == false) {
+      print('error: ${dbData['error']}');
+      context.go('/');
+      return;
+    }
+    final currentSession = dbData['session'];
+
+    global.room = Room(
+      pin: data['pin'],
+      name: data['quiz_name'],
+      quizId: data['quiz_id'],
+    );
+
+    global.room!.settings.loadJson(currentSession);
+
+    for (var participants in data['participants']) {
+      global.room!.participants[participants['name']] = Participant(
+        isOnline: participants['is_online'],
+      );
+    }
+
     context.go('/host/monitor/$pin');
+
   }
 
   @override
@@ -198,7 +226,7 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
             onTap: () {
               print('Selected session: ${session['code']} (${session['status']})');
               if (session['status'] != 'FINISHED') {
-                reconnect(session['code']);
+                tryReconnect(session['code']);
               }
             },
           ),
