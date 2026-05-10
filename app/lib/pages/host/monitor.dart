@@ -50,11 +50,13 @@ class _MonitorPageState extends State<MonitorPage> {
 
     final dbData = await db.getSessionWithPin(data['pin']);
     if (!mounted) return;
+
     if (dbData['success'] == false) {
       print('error: ${dbData['error']}');
       context.go('/');
       return;
     }
+
     final currentSession = dbData['session'];
 
     global.room = Room(
@@ -65,11 +67,7 @@ class _MonitorPageState extends State<MonitorPage> {
 
     global.room!.settings.loadJson(currentSession);
 
-    for (var participants in data['participants']) {
-      global.room!.participants[participants['name']] = Participant(
-        isOnline: participants['is_online'],
-      );
-    }
+    _updateParticipants(data['participants']);
 
     setState(() {
       isLoading = false;
@@ -81,21 +79,23 @@ class _MonitorPageState extends State<MonitorPage> {
       if (!mounted) return;
       if (global.room == null) return;
 
-      if (data['type'] == 'player_joined') {
-        setState(() {
-          room!.participants[data['name']] = Participant(
-            isOnline: true,
-          );
-        });
-      }
-
-      else if (data['type'] == 'player_left') {
-        setState(() {
-          room!.participants[data['name']].isOnline = false;
-        });
+      if (data['type'] == 'player_list') {
+        _updateParticipants(data['participants']);
+        return;
       }
 
     });
+  }
+
+  void _updateParticipants(dynamic participants) {
+    setState(() {
+      for (var participant in participants) {
+        room!.participants[participant['name']] = Participant(
+          isOnline: participant['is_online'],
+        );
+      }
+    });
+
   }
 
   void closeRoom() async {
@@ -147,7 +147,7 @@ class _MonitorPageState extends State<MonitorPage> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('Players waiting: ${room!.numOnlinePlayers}', style: TextStyle(fontSize: 18)),
+        Text('Players waiting: ${room!.onlineParticipants.length}', style: TextStyle(fontSize: 18)),
         Container(
           width: 200,
           height: 200,

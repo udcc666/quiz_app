@@ -34,14 +34,15 @@ class ServerParticipantFunctions {
         return;
       }
 
+      server.socketSession.remove(participant.socketId);
+      server.socketSession[socketId] = pin;
+
       participant.socketId = socketId;
       participant.isOnline = true;
+
       message['success'] = true;
       server.broadcast.toClient(socketId, message);
-      server.broadcast.toHost(pin, {
-        'type': 'player_joined',
-        'name': name,
-      });
+      server.functions..room.sendPlayers2Host(socketId, pin);
       return;
     }
 
@@ -68,14 +69,12 @@ class ServerParticipantFunctions {
       isOnline: true,
     ));
     
+    server.socketSession[socketId] = pin;
     server.log(msg:"'$name' joined session '$pin'");
 
     message['success'] = true;
     server.broadcast.toClient(socketId, message);
-    server.broadcast.toHost(pin, {
-      'type': 'player_joined',
-      'name': name,
-    });
+    server.functions.room.sendPlayers2Host(socketId, pin);
   }
 
   void leave(String socketId, String pin) {
@@ -102,13 +101,11 @@ class ServerParticipantFunctions {
     }
 
     participant.isOnline = false;
+    server.socketSession.remove(socketId); 
 
     message['success'] = true;
     server.broadcast.toClient(socketId, message);
-    server.broadcast.toHost(pin, {
-      'type': 'player_left',
-      'name': participant.name,
-    });
+    server.functions.room.sendPlayers2Host(socketId, pin);
     server.log(msg:"'${participant.name}' left session '$pin'");
   }
 }

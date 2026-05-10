@@ -28,6 +28,7 @@ class Server {
   Map<String, WebSocket> _clients = {};
 
   Map<String, Session> sessions = {};
+  Map<String, String> socketSession = {};
 
   void log({String? msg, String? debugMsg}) {
     bool canPrint = msg != null;
@@ -122,8 +123,8 @@ class Server {
           data = null;
         }
       },
-      onDone: () => _clients.remove(clientId),
-      onError: (err) => _clients.remove(clientId),
+      onDone: () => _on_client_disconnected(socket, clientId),
+      onError: (err) => _on_client_disconnected(socket, clientId),
     );
   }
 
@@ -139,6 +140,22 @@ class Server {
     }
 
     handler(clientId, data);
+  }
+
+  void _on_client_disconnected(WebSocket socket, String socketId)  {
+
+    log(debugMsg:'Client $socketId disconnected');
+    
+    if (socketSession.containsKey(socketId)) {
+      final pin = socketSession[socketId]!;
+      final session = sessions[pin];
+      if (session != null && session.hostSocketID != socketId) {
+        functions.participant.leave(socketId, pin);
+      }
+      socketSession.remove(socketId);
+    }
+
+    _clients.remove(socketId);
   }
 }
 

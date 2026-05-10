@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 // import 'package:quiz_app/db_functions.dart' as db;
-// import 'package:quiz_app/global.dart' as global;
+import 'package:quiz_app/global.dart' as global;
 import 'package:quiz_app/server_functions.dart' as server;
 
 class OnRoomPage extends StatefulWidget {
@@ -17,6 +17,12 @@ class _OnRoomPageState extends State<OnRoomPage> {
   @override
   void initState() {
     super.initState();
+    if (global.room == null) {
+      Future.microtask(() {
+        context.go('/client/select_room/${widget.pin}');
+      });
+      return;
+    }
   }
 
   void exit() async {

@@ -30,6 +30,7 @@ class ServerRoomFunctions {
       participants: [],
     );
 
+    server.socketSession[socketId] = pin;
     server.log(msg:"Created session '$pin'");
 
     message['success'] = true;
@@ -58,6 +59,7 @@ class ServerRoomFunctions {
     }
 
     await db.session.finish(pin);
+    server.socketSession.remove(socketId);
     server.sessions.remove(pin);
     server.log(msg:"Removed session '$pin'");
 
@@ -89,6 +91,7 @@ class ServerRoomFunctions {
 
     // Success
     session.hostSocketID = socketId;
+    server.socketSession[socketId] = pin;
     //server.log(msg:"Host (User ID: $userId) reconnected to session '$pin'");
 
     message['success'] = true;
@@ -102,6 +105,24 @@ class ServerRoomFunctions {
     }).toList();
 
     server.broadcast.toClient(socketId, message);
+  }
+
+  void sendPlayers2Host(String socketId, String pin) {
+    pin = pin.toUpperCase();
+    
+    if (!server.sessions.containsKey(pin)) {
+      return;
+    }
+    final session = server.sessions[pin]!;
+
+    server.broadcast.toHost(pin, {
+      'type': 'player_list',
+      'participants': session.participants.map((p) => {
+        'name': p.name,
+        'db_id': p.dbId,
+        'is_online': p.isOnline,
+      }).toList(),
+    });
   }
 
 }

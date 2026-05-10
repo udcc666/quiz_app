@@ -11,7 +11,7 @@ class Room {
   final String pin;
   final String name;
   late Settings settings;
-  Map<String, dynamic> participants = {};
+  Map<String, Participant> participants = {};
 
   Room({
     required this.pin,
@@ -20,8 +20,12 @@ class Room {
   }){
     settings = Settings();
   }
-
-  int get numOnlinePlayers => participants.values.where((p) => p.isOnline).length;
+  
+  Map<String, Participant> get onlineParticipants {
+    return Map.fromEntries(
+      participants.entries.where((entry) => entry.value.isOnline),
+    );
+  }
 }
 
 class Settings {

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-// import 'package:quiz_app/db_functions.dart' as db;
-// import 'package:quiz_app/global.dart' as global;
+import 'package:quiz_app/classes.dart';
+import 'package:quiz_app/db_functions.dart' as db;
+import 'package:quiz_app/global.dart' as global;
 import 'package:quiz_app/server_functions.dart' as server;
 
 class SelectRoomPage extends StatefulWidget {
@@ -53,18 +54,42 @@ class _SelectRoomPageState extends State<SelectRoomPage> {
     }
 
     final data = await server.client.joinRoom(name, securityCode, pin);
+    if (!mounted) return;
 
-    if (data['success']) {
-      if (!mounted) return;
-      context.go('/client/room/$pin');
+    if (data['success'] == false) {
+      setState(() {
+        loading = false;
+        validPin = data['valid_room'];
+        errorMessage = data['error'];
+      });
       return;
     }
 
-    setState(() {
-      loading = false;
-      validPin = data['valid_room'];
-      errorMessage = data['error'];
-    });
+    final dbData = await db.getSessionWithPin(pin);
+    if (!mounted) return;
+    
+    if (dbData['success'] == false) {
+      setState(() {
+        loading = false;
+        validPin = false;
+        errorMessage = dbData['error'];
+      });
+      return;
+    }
+    
+    final currentSession = dbData['session'];
+
+    global.room = Room(
+      pin: pin,
+      name: currentSession['quiz_name'],
+      quizId: currentSession['quiz_id'],
+    );
+
+    global.room!.settings.loadJson(currentSession);
+
+    context.go('/client/room/$pin');
+
+    
   }
 
   @override
