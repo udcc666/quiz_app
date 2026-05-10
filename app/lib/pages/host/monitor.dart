@@ -24,12 +24,13 @@ class _MonitorPageState extends State<MonitorPage> {
   void initState() {
     super.initState();
 
+    checkSockets();
+
     if (room == null) {
       Future.microtask(tryReconnect);
       return;
     }
 
-    checkSockets();
 
     setState(() {
       isLoading = false;
@@ -70,8 +71,6 @@ class _MonitorPageState extends State<MonitorPage> {
       );
     }
 
-    checkSockets();
-
     setState(() {
       isLoading = false;
     });
@@ -80,6 +79,7 @@ class _MonitorPageState extends State<MonitorPage> {
   void checkSockets() {
     global.client.onMessage.listen((data) {
       if (!mounted) return;
+      if (global.room == null) return;
 
       if (data['type'] == 'player_joined') {
         setState(() {
