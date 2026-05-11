@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:quiz_app/classes.dart';
 import 'package:quiz_app/db_functions.dart' as db;
 import 'package:quiz_app/global.dart' as global;
+import 'package:quiz_app/imports/quiz.dart';
+import 'package:quiz_app/imports/room.dart';
 import 'package:quiz_app/server_functions.dart' as server;
 
 class SelectRoomPage extends StatefulWidget {
@@ -81,15 +82,13 @@ class _SelectRoomPageState extends State<SelectRoomPage> {
 
     global.room = Room(
       pin: pin,
-      name: currentSession['quiz_name'],
-      quizId: currentSession['quiz_id'],
     );
-
+    global.room!.quiz = await Quiz.fromId(currentSession['quiz_id']);
     global.room!.settings.loadJson(currentSession);
 
-    context.go('/client/room/$pin');
+    if (!mounted) return;
 
-    
+    context.go('/client/room/$pin');
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -17,20 +18,20 @@ class Client {
 
   Future<void> tryConnect() async {
     if (isConnected) {
-      print("Already connected");
+      debugPrint("Already connected");
       return;
     }
 
-    print("Connecting to server...");
+    debugPrint("Connecting to server...");
 
     channel = WebSocketChannel.connect(Uri.parse(server.server));
 
     try {
       await channel!.ready;
-      print('Connected to server');
+      debugPrint('Connected to server');
       _whenConnected();
     } catch (e) {
-      print("Unable to connect to server: $e");
+      debugPrint("Unable to connect to server: $e");
     }
   }
 
@@ -38,16 +39,16 @@ class Client {
     isConnected = true;
     channel!.stream.listen(
       (event) {
-        if (debug) print("Received: $event");
+        if (debug) debugPrint("Received: $event");
         var data = jsonDecode(event);
         _eventController.add(data);
       },
       onError: (error) {
-        print("Error: $error");
+        debugPrint("Error: $error");
         isConnected = false;
       },
       onDone: () {
-        print("Connection closed by the server");
+        debugPrint("Connection closed by the server");
         isConnected = false;
       },
     );
@@ -62,7 +63,7 @@ class Client {
 
   void send(String message) {
     if (!isConnected) {
-      print("Not connected");
+      debugPrint("Not connected");
       return;
     }
     channel!.sink.add(message);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:quiz_app/classes.dart';
+import 'package:quiz_app/imports/quiz.dart';
+import 'package:quiz_app/imports/room.dart';
 import 'package:quiz_app/db_functions.dart' as db;
 import 'package:quiz_app/global.dart' as global;
 import 'package:quiz_app/server_functions.dart' as server;
@@ -56,8 +57,11 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     if (!mounted) return;
 
     if (data['success']) {
-      global.room = Room(pin: data['pin'], name: quiz['name'], quizId: widget.quizId);
+      global.room = Room(pin: data['pin']);
       global.room!.settings.loadJson(settings.toJson());
+      global.room!.quiz = await Quiz.fromId(widget.quizId);
+
+      if (!mounted) return;
       context.go('/host/monitor/${data['pin']}');
     } else {
       setState(() {

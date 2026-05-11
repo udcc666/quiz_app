@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:flutter/material.dart';
 import 'package:quiz_app/global.dart' as global;
 
 final String server = 'ws://localhost:1475';
@@ -19,7 +19,7 @@ class Host {
     Map<String, dynamic> settings,
   ) async {
     if (!global.client.isConnected) {
-      print("Not connected");
+      debugPrint("Not connected");
       return {'success': false, 'message': 'Not connected to server'};
     }
 
@@ -33,7 +33,7 @@ class Host {
 
   Future<Map<String, dynamic>> removeRoom(String pin) async {
     if (!global.client.isConnected) {
-      print("Not connected");
+      debugPrint("Not connected");
       return {'success': false, 'message': 'Not connected to server'};
     }
 
@@ -42,7 +42,7 @@ class Host {
 
   Future<Map<String, dynamic>> reconnectHost(String pin) async {
     if (!global.client.isConnected) {
-      print("Not connected");
+      debugPrint("Not connected");
       return {'success': false, 'message': 'Not connected to server'};
     }
 
@@ -65,7 +65,7 @@ class Client {
 
   Future<Map<String, dynamic>> joinRoom(String name, String securityCode, String pin) async {
     if (!global.client.isConnected) {
-      print("Not connected");
+      debugPrint("Not connected");
       return {'success': false, 'message': 'Not connected to server'};
     }
 
@@ -79,7 +79,7 @@ class Client {
 
   Future<Map<String, dynamic>> leaveRoom(String pin) async {
     if (!global.client.isConnected) {
-      print("Not connected");
+      debugPrint("Not connected");
       return {'success': false, 'message': 'Not connected to server'};
     }
 

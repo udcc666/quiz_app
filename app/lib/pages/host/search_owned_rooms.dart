@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:quiz_app/classes.dart';
+import 'package:quiz_app/imports/classes.dart';
+import 'package:quiz_app/imports/quiz.dart';
+import 'package:quiz_app/imports/room.dart';
 import 'package:quiz_app/db_functions.dart' as db;
 import 'package:quiz_app/global.dart' as global;
 import 'package:quiz_app/server_functions.dart' as server;
@@ -67,7 +69,7 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
     if (!mounted) return;
 
     if (data['success'] == false) {
-      print('error: ${data['error']}');
+      debugPrint('error: ${data['error']}');
       context.go('/');
       return;
     }
@@ -75,7 +77,7 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
     final dbData = await db.getSessionWithPin(data['pin']);
     if (!mounted) return;
     if (dbData['success'] == false) {
-      print('error: ${dbData['error']}');
+      debugPrint('error: ${dbData['error']}');
       context.go('/');
       return;
     }
@@ -83,9 +85,8 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
 
     global.room = Room(
       pin: data['pin'],
-      name: data['quiz_name'],
-      quizId: data['quiz_id'],
     );
+    global.room!.quiz = await Quiz.fromId(currentSession['quiz_id']);
 
     global.room!.settings.loadJson(currentSession);
 
@@ -95,6 +96,7 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
       );
     }
 
+    if (!mounted) return;
     context.go('/host/monitor/$pin');
 
   }
@@ -224,7 +226,7 @@ class _SearchOwnedRoomsPageState extends State<SearchOwnedRoomsPage> {
             session['code'],
             colorIndex: ['LOBBY', 'ACTIVE', 'FINISHED'].indexOf(session['status'])+1,
             onTap: () {
-              print('Selected session: ${session['code']} (${session['status']})');
+              debugPrint('Selected session: ${session['code']} (${session['status']})');
               if (session['status'] != 'FINISHED') {
                 tryReconnect(session['code']);
               }

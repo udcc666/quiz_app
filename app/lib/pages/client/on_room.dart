@@ -14,11 +14,13 @@ class OnRoomPage extends StatefulWidget {
 }
 
 class _OnRoomPageState extends State<OnRoomPage> {
+  
   @override
   void initState() {
     super.initState();
     if (global.room == null) {
       Future.microtask(() {
+        if (!mounted) return;
         context.go('/client/select_room/${widget.pin}');
       });
       return;
@@ -36,6 +38,8 @@ class _OnRoomPageState extends State<OnRoomPage> {
     // final theme = Theme.of(context);
     // final colors = theme.colorScheme;
 
+    final quiz = global.room!.quiz!;
+
     return Scaffold(
       body: Column(
         children: [
@@ -48,6 +52,9 @@ class _OnRoomPageState extends State<OnRoomPage> {
             ],
           ),
           Text('On room ${widget.pin}'),
+          Text('Name: ${quiz.name}'),
+          Text('Description: ${quiz.description}'),
+          Text('Questions: ${quiz.questions.length}'),
         ],
       ),
     );

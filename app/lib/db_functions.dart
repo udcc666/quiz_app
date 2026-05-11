@@ -103,6 +103,24 @@ Future<Map<String, dynamic>> getSessionWithPin(String pin) async {
   return json.decode(response.body);
 }
 
+Future<Map<String, dynamic>> getQuizData(int quizId) async {
+  late dynamic response;
+  try {
+    response = await http.get(
+      Uri.parse('$host/quiz/get_quiz.php?id=$quizId'),
+      headers: headers,
+    );
+  } catch(e){
+    return {'success': false, 'error': 'Failed to connect to backend'};
+  }
+
+  if (response.statusCode != 200) {
+    return {'success': false, 'error': 'Backend returned code ${response.statusCode}'};
+  }
+
+  return json.decode(response.body);
+}
+
 /* Future<Map<String, dynamic>> createSession(int userId, int quizId, Map<String, dynamic> settings) async {
   late dynamic response;
   

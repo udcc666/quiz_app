@@ -24,6 +24,31 @@ if ($result->num_rows === 0){
 
 $quiz = $result->fetch_assoc();
 
+// Get questions
+$stmt = $conn->prepare('SELECT * FROM questions WHERE quiz_id = ?');
+$stmt->bind_param('i', $id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$questions = [];
+
+while ($row = $result->fetch_assoc()){
+    // Get answers
+    $stmt = $conn->prepare('SELECT answer, is_correct FROM answers WHERE question_id = ? ORDER BY position');
+    $stmt->bind_param('i', $row['id']);
+    $stmt->execute();
+    $aResult = $stmt->get_result();
+
+    $answers = [];
+
+    while ($row1 = $aResult->fetch_assoc()){
+        $answers[] = $row1;
+    }
+    $row['answers'] = $answers;
+
+    $questions[] = $row;
+}
+
 echo json_encode([
     'success' => true,
     'quiz' => [
@@ -37,6 +62,7 @@ echo json_encode([
         'show_answers' => $quiz['show_answers'] == '1',
         'duration' => $quiz['duration'],
         'start_at_host' => $quiz['start_at_host'] == '1',
+        'questions' => $questions,
     ],
 ]);
 

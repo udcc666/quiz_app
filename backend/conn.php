@@ -17,12 +17,15 @@ function db_connect(){
 
 /*
   Table quizzes:
-    name(varchar 100), 
-    description(varchar 500)
-    host_controlled(bool: true): host controls current question
-    duration(int/null): in seconds, 
-    allow_late_entry(bool: true),
-    catch_up(bool: true): late user goes to host question or to the start
+    name(varchar 100),
+    description(varchar 500),
+    host_controlled(bool): host controls current question,
+    allow_late_entry(bool),
+    max_clients(int/null),
+    show_leaderboard_between_questions(bool),
+    show_answers(bool),
+    duration(bigint/null): in seconds,
+    start_at_host(bool): client starts at host or from the start
   
   Table questions:
     quiz_id(int),

@@ -1,22 +1,14 @@
-class Participant {
-  bool isOnline;
-
-  Participant({
-    required this.isOnline,
-  });
-}
+import 'package:quiz_app/imports/classes.dart';
+import 'package:quiz_app/imports/quiz.dart';
 
 class Room {
-  final int quizId;
   final String pin;
-  final String name;
   late Settings settings;
+  Quiz? quiz;
   Map<String, Participant> participants = {};
 
   Room({
     required this.pin,
-    required this.name,
-    required this.quizId,
   }){
     settings = Settings();
   }
@@ -73,3 +65,4 @@ class Settings {
     'start_at_host': startAtHost,
   };
 }
+

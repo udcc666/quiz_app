@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:quiz_app/classes.dart';
+import 'package:quiz_app/imports/classes.dart';
+import 'package:quiz_app/imports/quiz.dart';
+import 'package:quiz_app/imports/room.dart';
 import 'package:quiz_app/global.dart' as global;
 import 'package:quiz_app/server_functions.dart' as server;
 import 'package:quiz_app/db_functions.dart' as db;
@@ -43,7 +45,7 @@ class _MonitorPageState extends State<MonitorPage> {
     if (!mounted) return;
 
     if (data['success'] == false) {
-      print('error: ${data['error']}');
+      debugPrint('error: ${data['error']}');
       context.go('/');
       return;
     }
@@ -52,20 +54,22 @@ class _MonitorPageState extends State<MonitorPage> {
     if (!mounted) return;
 
     if (dbData['success'] == false) {
-      print('error: ${dbData['error']}');
+      debugPrint('error: ${dbData['error']}');
       context.go('/');
       return;
     }
 
     final currentSession = dbData['session'];
 
+    debugPrint('Loading room: ${currentSession['quiz_id']}');
     global.room = Room(
       pin: data['pin'],
-      name: data['quiz_name'],
-      quizId: data['quiz_id'],
     );
+    global.room!.quiz = await Quiz.fromId(currentSession['quiz_id']);
 
     global.room!.settings.loadJson(currentSession);
+
+    debugPrint('Loaded room: ${currentSession['quiz_id']}');
 
     _updateParticipants(data['participants']);
 

@@ -60,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       body: Center(
-        child: Container(
+        child: SizedBox(
           width: 400,
           child: AutofillGroup(
             child: Column(
