@@ -108,6 +108,12 @@ class _MonitorPageState extends State<MonitorPage> {
     goBack();
   }
 
+  void startRoom() async {
+    final data = 0;//await server.host.startRoom(widget.sessionPin);
+    if (!mounted) return;
+    goBack();
+  }
+
   void goBack() {
     context.go('/');
   }
@@ -141,14 +147,34 @@ class _MonitorPageState extends State<MonitorPage> {
               ),
             ],
           ),
-          Center(child: buildWaitingScreen()),
-          
+          if (room!.statusLobby()) buildWaitingScreen(),
+          if (room!.statusActive()) buildActiveScreen(),
+
         ],
       ),
     );
   }
 
   Widget buildWaitingScreen() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text('Players waiting: ${room!.onlineParticipants.length}', style: TextStyle(fontSize: 18)),
+        Container(
+          width: 200,
+          height: 200,
+          decoration: BoxDecoration(color: Colors.blueGrey),
+        ),
+        Text('Pin: ${widget.sessionPin}', style: TextStyle(fontSize: 18)),
+        FilledButton(
+          onPressed: startRoom,
+          child: Text('Start room'),
+        ),
+      ],
+    );
+  }
+
+  Widget buildActiveScreen() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [

@@ -31,6 +31,16 @@ class session {
     );
   }
 
+  static Future<Map<String, dynamic>> setStatus(String pin, String status) {
+    return _processRequest(
+      http.post(
+        Uri.parse('$_host/session/set_status.php'),
+        headers: _headers,
+        body: jsonEncode({'pin': pin, 'status': status}),
+      ),
+    );
+  }
+
   static Future<Map<String, dynamic>> finish(String pin) {
     return _processRequest(
       http.post(

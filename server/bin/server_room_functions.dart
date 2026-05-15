@@ -38,6 +38,48 @@ class ServerRoomFunctions {
     server.broadcast.toClient(socketId, message);
   }
 
+  void start(String socketId, String pin) async {
+    pin = pin.toUpperCase().trim();
+    
+    Map<String, dynamic> message = {
+      'type': 'start_room',
+      'success': false,
+    };
+
+    if (!server.sessions.containsKey(pin)) {
+      message['error'] = 'Session not found';
+      server.broadcast.toClient(socketId, message);
+      return;
+    }
+
+    final session = server.sessions[pin]!;
+
+    if (session.hostSocketID != socketId) {
+      message['error'] = 'You are not the host of this session';
+      server.broadcast.toClient(socketId, message);
+      return;
+    }
+
+    if (!session.statusLobby()) {
+      message['error'] = 'Session already started';
+      server.broadcast.toClient(socketId, message);
+      return;
+    }
+
+    // Success
+
+    session.status = SESSION_STATUS_ACTIVE;
+    db.session.setStatus(pin, SESSION_STATUS_ACTIVE);
+
+    message['success'] = true;
+    message['participants'] = session.participants.map((p) => {
+      'name': p.name,
+      'db_id': p.dbId,
+      'is_online': p.isOnline,
+    });
+    server.broadcast.toClient(socketId, message);
+  }
+
   void finish(String socketId, String pin) async {
     Map<String, dynamic> message = {
       'type': 'remove_room',

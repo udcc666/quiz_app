@@ -1,8 +1,13 @@
+const SESSION_STATUS_LOBBY = 'LOBBY';
+const SESSION_STATUS_ACTIVE = 'ACTIVE';
+const SESSION_STATUS_FINISHED = 'FINISHED';
+
 class Session {
   final int dbId;
   final int quizId;
   final String quizName;
   final int hostUserId;
+  String status;
   String hostSocketID;
   List<Participant> participants;
 
@@ -12,8 +17,13 @@ class Session {
     required this.quizName,
     required this.hostUserId,
     required this.hostSocketID,
+    this.status = 'LOBBY',
     this.participants = const [],
   });
+
+  bool statusLobby() => status == SESSION_STATUS_LOBBY;
+  bool statusActive() => status == SESSION_STATUS_ACTIVE;
+  bool statusFinished() => status == SESSION_STATUS_FINISHED;
 }
 
 class Participant {
