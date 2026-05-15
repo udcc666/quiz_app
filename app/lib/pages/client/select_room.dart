@@ -84,7 +84,7 @@ class _SelectRoomPageState extends State<SelectRoomPage> {
       pin: pin,
     );
     global.room!.quiz = await Quiz.fromId(currentSession['quiz_id']);
-    global.room!.settings.loadJson(currentSession);
+    global.room!.loadFromJson(currentSession);
 
     if (!mounted) return;
 

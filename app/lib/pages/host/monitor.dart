@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:quiz_app/imports/classes.dart';
+import 'package:quiz_app/imports/participant.dart';
 import 'package:quiz_app/imports/quiz.dart';
 import 'package:quiz_app/imports/room.dart';
 import 'package:quiz_app/global.dart' as global;
@@ -67,7 +67,7 @@ class _MonitorPageState extends State<MonitorPage> {
     );
     global.room!.quiz = await Quiz.fromId(currentSession['quiz_id']);
 
-    global.room!.settings.loadJson(currentSession);
+    global.room!.loadFromJson(currentSession);
 
     debugPrint('Loaded room: ${currentSession['quiz_id']}');
 
@@ -117,7 +117,7 @@ class _MonitorPageState extends State<MonitorPage> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    if (isLoading) {
+    if (isLoading || room == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -142,6 +142,7 @@ class _MonitorPageState extends State<MonitorPage> {
             ],
           ),
           Center(child: buildWaitingScreen()),
+          
         ],
       ),
     );

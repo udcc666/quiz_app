@@ -1,4 +1,4 @@
-import 'package:quiz_app/imports/classes.dart';
+import 'package:quiz_app/imports/participant.dart';
 import 'package:quiz_app/imports/quiz.dart';
 
 class Room {
@@ -6,9 +6,11 @@ class Room {
   late Settings settings;
   Quiz? quiz;
   Map<String, Participant> participants = {};
+  String status;
 
   Room({
     required this.pin,
+    this.status = 'LOBBY',
   }){
     settings = Settings();
   }
@@ -17,6 +19,23 @@ class Room {
     return Map.fromEntries(
       participants.entries.where((entry) => entry.value.isOnline),
     );
+  }
+
+  void loadFromJson(Map<String, dynamic> data) {
+    status = data['status'] ?? 'LOBBY';
+    settings.loadJson(data);
+  }
+
+  bool statusLobby() {
+    return status == 'LOBBY';
+  }
+
+  bool statusActive() {
+    return status == 'ACTIVE';
+  }
+
+  bool statusFinished() {
+    return status == 'ACTIVE';
   }
 }
 
@@ -64,5 +83,6 @@ class Settings {
     'duration': duration,
     'start_at_host': startAtHost,
   };
+
 }
 

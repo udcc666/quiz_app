@@ -25,7 +25,9 @@ class Quiz {
       name: json['name'] ?? '',
       description: json['description'] ?? '',
     );
-    // quiz.questions = json['questions'].map((q) => Question.fromJson(q)).toList();
+    for (var question in json['questions']) {
+      quiz.questions.add(Question.fromJson(question));
+    }
     return quiz;
   }
 
@@ -43,25 +45,21 @@ class Quiz {
 class Question {
   String question;
   List<Answer> answers;
-  int? correctAnswerIndex;
 
   Question({
     required this.question,
     required this.answers,
-    this.correctAnswerIndex,
   });
 
   Map<String, dynamic> toJson() => {
     'question': question,
     'answers': answers.map((a) => a.toJson()).toList(),
-    'correct_answer_index': correctAnswerIndex,
   };
 
   static Question fromJson(Map<String, dynamic> json) {
     return Question(
       question: json['question'],
-      answers: json['answers'].map((a) => Answer.fromJson(a)).toList(),
-      correctAnswerIndex: json['correct_answer_index'],
+      answers: []//json['answers'].map((a) => Answer.fromJson(a)).toList(),
     );
   }
 }

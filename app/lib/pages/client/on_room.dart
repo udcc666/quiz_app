@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 // import 'package:quiz_app/db_functions.dart' as db;
 import 'package:quiz_app/global.dart' as global;
+import 'package:quiz_app/imports/quiz.dart';
+import 'package:quiz_app/imports/room.dart';
 import 'package:quiz_app/server_functions.dart' as server;
 
 class OnRoomPage extends StatefulWidget {
@@ -14,7 +16,12 @@ class OnRoomPage extends StatefulWidget {
 }
 
 class _OnRoomPageState extends State<OnRoomPage> {
+
+  Room? get room => global.room;
   
+  bool isLoading = true;
+  int currentQuestion = 0;
+
   @override
   void initState() {
     super.initState();
@@ -25,6 +32,12 @@ class _OnRoomPageState extends State<OnRoomPage> {
       });
       return;
     }
+
+    debugPrint('Loaded quiz: ${room!.quiz!.toJson()}');
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   void exit() async {
@@ -38,7 +51,11 @@ class _OnRoomPageState extends State<OnRoomPage> {
     // final theme = Theme.of(context);
     // final colors = theme.colorScheme;
 
-    final quiz = global.room!.quiz!;
+    if (isLoading || room == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final quiz = room!.quiz!;
 
     return Scaffold(
       body: Column(
@@ -55,6 +72,7 @@ class _OnRoomPageState extends State<OnRoomPage> {
           Text('Name: ${quiz.name}'),
           Text('Description: ${quiz.description}'),
           Text('Questions: ${quiz.questions.length}'),
+          Text('Status: ${room!.status}'),
         ],
       ),
     );

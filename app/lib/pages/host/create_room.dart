@@ -15,13 +15,16 @@ class CreateRoomPage extends StatefulWidget {
 }
 
 class _CreateRoomPageState extends State<CreateRoomPage> {
+
   bool isCreating = false;
-  dynamic quiz;
+  bool isLoading = true;
   String errorMessage = '';
 
   final Settings settings = Settings();
   final Settings defaultSettings = Settings();
   bool useDefaultSettings = true;
+
+  Quiz? quiz;
 
   @override
   void initState() {
@@ -35,13 +38,25 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
 
   void _loadQuiz() async {
     final data = await db.getQuizWithId(widget.quizId);
-    if (mounted) {
+    
+    if (!mounted) return;
+
+    if (data['success'] == false) {
       setState(() {
-        quiz = data['quiz'];
-        settings.loadJson(quiz);
-        defaultSettings.loadJson(quiz);
+        errorMessage = data['error'];
+        isLoading = false;
       });
+      return;
     }
+
+    quiz = Quiz.fromJson(data['quiz']);
+
+    setState(() {
+      settings.loadJson(data['quiz']);
+      defaultSettings.loadJson(data['quiz']);
+      isLoading = false;
+    });
+    
   }
 
   void _handleCreate() async {
@@ -58,8 +73,8 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
 
     if (data['success']) {
       global.room = Room(pin: data['pin']);
-      global.room!.settings.loadJson(settings.toJson());
-      global.room!.quiz = await Quiz.fromId(widget.quizId);
+      global.room!.loadFromJson(settings.toJson());
+      global.room!.quiz = quiz;
 
       if (!mounted) return;
       context.go('/host/monitor/${data['pin']}');
@@ -73,7 +88,14 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (quiz == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+
+    if (quiz == null) {
+      return Scaffold(
+        body: Center(child: Text('Failed to load quiz\n$errorMessage')),
+      );
+    }
+    // final quiz = room!.quiz!;
 
     return Scaffold(
       body: SafeArea(
@@ -99,7 +121,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                 setState(() {
                   useDefaultSettings = val;
                   if (useDefaultSettings) {
-                    settings.loadJson(quiz);
+                    // settings.loadJson(quiz);
                   }
                 });
               },
@@ -126,7 +148,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                     const SizedBox(height: 10),
                     
                     TextField(
-                      controller: TextEditingController(text: settings.maxClients?.toString() ?? '')..selection = TextSelection.collapsed(offset: (settings.maxClients?.toString() ?? '').length),
+                      // controller: TextEditingController(text: settings.maxClients?.toString() ?? '')..selection = TextSelection.collapsed(offset: (settings.maxClients?.toString() ?? '').length),
                       decoration: const InputDecoration(labelText: "Limite de Jogadores"),
                       keyboardType: TextInputType.number,
                       onChanged: (v) => settings.maxClients = int.tryParse(v),
