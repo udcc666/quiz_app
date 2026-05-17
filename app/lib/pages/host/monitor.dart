@@ -109,9 +109,8 @@ class _MonitorPageState extends State<MonitorPage> {
   }
 
   void startRoom() async {
-    final data = 0;//await server.host.startRoom(widget.sessionPin);
+    final data = await server.host.startRoom(widget.sessionPin);
     if (!mounted) return;
-    goBack();
   }
 
   void goBack() {

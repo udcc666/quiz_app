@@ -66,8 +66,9 @@ class ServerRoomFunctions {
       return;
     }
 
-    // Success
+    await db.session.setStatus(pin, SESSION_STATUS_ACTIVE);
 
+    // Success
     session.status = SESSION_STATUS_ACTIVE;
     db.session.setStatus(pin, SESSION_STATUS_ACTIVE);
 

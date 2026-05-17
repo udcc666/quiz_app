@@ -52,6 +52,19 @@ class Host {
       'pin': pin,
     });
   }
+
+  Future<Map<String, dynamic>> startRoom(String pin) async {
+    if (!global.client.isConnected) {
+      debugPrint("Not connected");
+      return {'success': false, 'message': 'Not connected to server'};
+    }
+
+    return await getData('start_room', {
+      'type': 'start_room',
+      'user_id': global.userId,
+      'pin': pin,
+    });
+  }
 }
 
 class Client {
